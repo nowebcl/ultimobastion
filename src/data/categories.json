@@ -1,0 +1,110 @@
+[
+  {
+    "id": 179,
+    "name": "Agrupaciones Comunitarias",
+    "slug": "agrupaciones-comunitarias",
+    "count": 298
+  },
+  {
+    "id": 35,
+    "name": "Columna de Opinión",
+    "slug": "columna-de-opinion",
+    "count": 4
+  },
+  {
+    "id": 29,
+    "name": "Conectividad",
+    "slug": "conectividad",
+    "count": 62
+  },
+  {
+    "id": 10,
+    "name": "Cultura/Comunidad",
+    "slug": "cultura-comunidad",
+    "count": 337
+  },
+  {
+    "id": 12,
+    "name": "Deporte",
+    "slug": "deporte",
+    "count": 69
+  },
+  {
+    "id": 370,
+    "name": "Desarrollo social y comunitario",
+    "slug": "desarrollo-social-y-comunitario",
+    "count": 235
+  },
+  {
+    "id": 16,
+    "name": "Educación",
+    "slug": "educacion",
+    "count": 179
+  },
+  {
+    "id": 31,
+    "name": "Equipamiento",
+    "slug": "equipamiento",
+    "count": 109
+  },
+  {
+    "id": 510,
+    "name": "Festival Retro",
+    "slug": "festival-retro",
+    "count": 3
+  },
+  {
+    "id": 11,
+    "name": "Fomento",
+    "slug": "fomento",
+    "count": 274
+  },
+  {
+    "id": 33,
+    "name": "Innovación",
+    "slug": "innovacion",
+    "count": 185
+  },
+  {
+    "id": 1,
+    "name": "Proyectos",
+    "slug": "proyectos",
+    "count": 290
+  },
+  {
+    "id": 34,
+    "name": "Regional",
+    "slug": "regional",
+    "count": 196
+  },
+  {
+    "id": 14,
+    "name": "Salud",
+    "slug": "salud",
+    "count": 109
+  },
+  {
+    "id": 32,
+    "name": "Seguridad",
+    "slug": "seguridad",
+    "count": 92
+  },
+  {
+    "id": 15,
+    "name": "Turismo",
+    "slug": "turismo",
+    "count": 85
+  },
+  {
+    "id": 916,
+    "name": "VERANO",
+    "slug": "verano",
+    "count": 3
+  },
+  {
+    "id": 30,
+    "name": "Verano 2026",
+    "slug": "verano-2026",
+    "count": 23
+  }
+]
