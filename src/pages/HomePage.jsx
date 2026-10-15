@@ -774,11 +774,11 @@ export default function HomePage() {
         </section>
 
         {/* 7. SECTION 5: WIDE PANORAMIC BANNER */}
-        <section className="rounded-2xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[2.33/1] min-h-[250px] sm:min-h-[320px] md:min-h-[380px] lg:min-h-[440px] flex items-center p-6 sm:p-10 shadow-md border border-slate-200/60 group bg-slate-900">
+        <section className="rounded-2xl overflow-hidden relative min-h-[180px] sm:min-h-[220px] md:min-h-[240px] flex items-center p-6 sm:p-10 shadow-md border border-slate-200/60 group bg-slate-900">
           <img
-            src="/images/site/banner-panorama.webp?v=3"
+            src="/images/site/banner-panorama.webp?v=4"
             alt="Maullín: Un destino por descubrir"
-            className="absolute inset-0 w-full h-full object-cover object-bottom sm:object-[center_85%] group-hover:scale-[1.02] transition-transform duration-700"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-700"
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Atardecer%20dram%C3%A1tico%20sobre%20el%20muelle%20costero.png' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/35 to-transparent max-w-xl" />

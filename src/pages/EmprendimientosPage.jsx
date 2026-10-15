@@ -94,24 +94,24 @@ export default function EmprendimientosPage() {
         {/* TOP CTA: REGISTRA TU EMPRENDIMIENTO */}
         <div className="bg-gradient-to-r from-emerald-800 to-teal-700 rounded-2xl p-6 sm:p-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
-            <span className="bg-emerald-500/50 text-white font-bold text-xs uppercase px-3 py-1 rounded-full inline-block">
-              Vitrina Gratuita
+            <span className="bg-emerald-500/50 text-white font-bold text-xs uppercase px-3.5 py-1.5 rounded-full inline-block tracking-wider">
+              Consulta nuestros planes y promociones
             </span>
             <h2 className="text-2xl font-bold font-serif">
               ¿Tienes un negocio, hospedaje o servicio en Maullín?
             </h2>
             <p className="text-emerald-100 text-xs sm:text-sm max-w-xl">
-              Suma tu emprendimiento al portal de El Último Bastión sin costo alguno. Apoyemos el desarrollo productivo y el trabajo local.
+              Difunde tu negocio, hospedaje o servicio en el portal de El Último Bastión. Conoce nuestras opciones de difusión y apoya el comercio local.
             </p>
           </div>
           <a
-            href="https://wa.me/56995104318?text=Hola,%20quisiera%20registrar%20mi%20emprendimiento%20en%20Ultimo%20Bastion%20Maullin"
+            href="https://wa.me/56995104318?text=Hola,%20quisiera%20consultar%20por%20planes%20y%20promociones%20para%20mi%20negocio%20en%20Ultimo%20Bastion%20Maullin"
             target="_blank"
             rel="noreferrer"
             className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold px-6 py-3 rounded-xl flex items-center gap-2 text-sm shadow-sm transition-transform hover:scale-105 shrink-0"
           >
             <MessageCircle className="w-4 h-4 text-emerald-600" />
-            <span>Publicar Mi Emprendimiento</span>
+            <span>Consultar Planes & Promociones</span>
           </a>
         </div>
 
@@ -160,18 +160,18 @@ export default function EmprendimientosPage() {
                 Próximamente más emprendimientos
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
-                Aún no hay negocios registrados en esta categoría. Si eres dueño de un emprendimiento, hospedaje o servicio en Maullín, ¡sumalo gratis a la vitrina oficial!
+                Aún no hay negocios registrados en esta categoría. Si eres dueño de un emprendimiento, hospedaje o servicio en Maullín, consulta nuestros planes y promociones de difusión.
               </p>
             </div>
             <div className="pt-2">
               <a
-                href="https://wa.me/56995104318?text=Hola,%20quisiera%20registrar%20mi%20emprendimiento%20en%20Ultimo%20Bastion%20Maullin"
+                href="https://wa.me/56995104318?text=Hola,%20quisiera%20consultar%20por%20planes%20y%20promociones%20para%20mi%20negocio%20en%20Ultimo%20Bastion%20Maullin"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 bg-[#05a353] hover:bg-[#048a46] text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs transition-transform hover:scale-105"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Inscribir mi emprendimiento gratis</span>
+                <span>Consultar planes y promociones</span>
               </a>
             </div>
           </div>
