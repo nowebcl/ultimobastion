@@ -397,7 +397,34 @@ export default function AdminPage() {
 
     try {
       const fd = new FormData()
-      const finalSlug = postSlug.trim() || slugify(postTitle)
+
+      // Compute clean base slug
+      let baseSlug = (postSlug.trim() || slugify(postTitle))
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      if (!baseSlug) baseSlug = 'noticia'
+
+      // Guarantee slug uniqueness against PocketBase to prevent validation_not_unique (400)
+      let finalSlug = baseSlug
+      let counter = 1
+      while (counter <= 50) {
+        try {
+          const filter = editingPostId
+            ? `slug = "${finalSlug}" && id != "${editingPostId}"`
+            : `slug = "${finalSlug}"`
+          const existing = await pb.collection('noticias').getFirstListItem(filter)
+          if (existing) {
+            counter++
+            finalSlug = `${baseSlug}-${counter}`
+          } else {
+            break
+          }
+        } catch {
+          // Record not found -> slug is free!
+          break
+        }
+      }
       
       // Auto-format clean paragraphs if story was pasted as plain text
       let cleanContent = postContent.trim()
@@ -465,6 +492,12 @@ export default function AdminPage() {
       await syncDbPosts()
       await refreshCategoriesWithNews()
 
+      // Reset list filters and force instant list reload to page 1 so the new/edited post is immediately visible
+      setSearchNoticiasQuery('')
+      setSelectedCategoryFilter('Todas')
+      setNoticiasPage(1)
+      await fetchNoticiasList(1, '', 'Todas', true)
+
       // Reset form if was creation
       if (!editingPostId) {
         setPostTitle('')
@@ -480,7 +513,16 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Error saving post:', err)
-      setPostError(err.message || 'Error al guardar la noticia.')
+      let detailedMsg = err.message || 'Error al guardar la noticia.'
+      if (err.data?.data) {
+        const fieldDetails = Object.entries(err.data.data)
+          .map(([k, v]) => `${k}: ${typeof v === 'object' ? (v.message || v.code) : v}`)
+          .join(', ')
+        if (fieldDetails) {
+          detailedMsg += ` (${fieldDetails})`
+        }
+      }
+      setPostError(detailedMsg)
     } finally {
       setPostSubmitting(false)
     }
@@ -1202,7 +1244,7 @@ export default function AdminPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           to={getPostUrl(postSuccess)}
                           target="_blank"
@@ -1211,6 +1253,17 @@ export default function AdminPage() {
                           <Eye className="w-3.5 h-3.5" />
                           <span>Ver noticia</span>
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveSubView('list')
+                            fetchNoticiasList(1, '', 'Todas', true)
+                          }}
+                          className="text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <List className="w-3.5 h-3.5" />
+                          <span>Ver en lista</span>
+                        </button>
                         <button
                           onClick={() => setPostSuccess(null)}
                           className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1"
