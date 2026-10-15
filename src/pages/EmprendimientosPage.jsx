@@ -100,8 +100,8 @@ export default function EmprendimientosPage() {
             <h2 className="text-2xl font-bold font-serif">
               ¿Tienes un negocio, hospedaje o servicio en Maullín?
             </h2>
-            <p className="text-emerald-100 text-xs sm:text-sm max-w-xl">
-              Difunde tu negocio, hospedaje o servicio en el portal de El Último Bastión. Conoce nuestras opciones de difusión y apoya el comercio local.
+            <p className="text-emerald-100 text-xs sm:text-sm max-w-xl leading-relaxed">
+              Ideal si logran organizarse como agrupaciones turísticas, gremios, rutas y armar paquetes publicitarios anuales con todos los integrantes y sus emprendimientos.
             </p>
           </div>
           <a

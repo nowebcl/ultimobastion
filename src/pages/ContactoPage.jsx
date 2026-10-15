@@ -44,7 +44,7 @@ export default function ContactoPage() {
           <div className="flex items-center gap-2 text-xs text-sky-200 mb-3">
             <Link to="/" className="hover:text-white">Inicio</Link>
             <ChevronRight className="w-3 h-3 text-sky-400" />
-            <span>Atención Ciudadana</span>
+            <span>Contacto</span>
           </div>
           <div className="flex items-center gap-3">
             <Mail className="w-8 h-8 text-amber-400" />
@@ -53,7 +53,7 @@ export default function ContactoPage() {
             </h1>
           </div>
           <p className="text-sky-200 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-            Escríbenos para compartir noticias, denuncias vecinales, avisos comunitarios o consultar sobre publicidad y difusión en Maullín Último Bastión.
+            Escríbenos para compartir noticias, avisos comunitarios o consultar sobre publicidad y difusión en Maullín Último Bastión.
           </p>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function ContactoPage() {
                     required
                     value={formData.asunto}
                     onChange={handleChange}
-                    placeholder="Noticia, denuncia, consulta de publicidad..."
+                    placeholder="Noticia, aviso comunitario, consulta de publicidad..."
                     className="w-full text-xs px-3.5 py-2.5 rounded-lg bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-sky-500 transition-colors"
                   />
                 </div>
