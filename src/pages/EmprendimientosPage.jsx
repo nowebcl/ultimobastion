@@ -18,66 +18,6 @@ const directoryItems = [
     phone: "+56 9 9510 4318",
     hours: "Miércoles a Domingo 18:00 - 02:00",
     featured: true
-  },
-  {
-    id: 2,
-    name: "Cabañas & Hospedaje Río Maullín",
-    category: "hospedajes",
-    categoryName: "Hospedaje & Cabañas",
-    image: "/images/posts/15447.webp",
-    location: "Ribera del Río Maullín",
-    description: "Cabañas equipadas con vista privilegiada al estuario. Calefacción a leña, estacionamiento privado y acceso directo para bajada de botes y observación de aves del humedal.",
-    phone: "+56 9 8452 1190",
-    hours: "Atención 24/7 (Reservas previas)",
-    featured: false
-  },
-  {
-    id: 3,
-    name: "Navegaciones Fluviales Quenuir - Lepihué",
-    category: "fluvial",
-    categoryName: "Transporte Fluvial",
-    image: "/images/posts/15417.webp",
-    location: "Muelle de Pasajeros de Maullín",
-    description: "Servicios de cruce y tours fotográficos por los laberintos estuarinos y el santuario de la naturaleza. Embarcaciones con matrícula al día y chalecos salvavidas para toda la familia.",
-    phone: "+56 9 7321 0044",
-    hours: "Lunes a Domingo 07:30 - 19:30",
-    featured: false
-  },
-  {
-    id: 4,
-    name: "Turismo Rural y Senderos Carelmapu",
-    category: "rural",
-    categoryName: "Turismo Rural",
-    image: "/images/posts/15473.webp",
-    location: "Península de Carelmapu",
-    description: "Experiencias de recolección de orilla tradicional, curantos al hoyo comunitarios y caminatas guiadas por la playa Brava y el faro.",
-    phone: "+56 9 9211 4455",
-    hours: "Fines de semana y festivos",
-    featured: false
-  },
-  {
-    id: 5,
-    name: "Transportes Terrestres Maullín - Puerto Montt",
-    category: "terrestre",
-    categoryName: "Transporte Terrestre",
-    image: "/images/posts/15432.webp",
-    location: "Terminal de Buses Maullín",
-    description: "Servicio regular de pasajeros y encomiendas entre Maullín, Pargua, Los Muermos y el Terminal de Buses de Puerto Montt con salidas cada 30 minutos.",
-    phone: "+56 65 245 1020",
-    hours: "Salidas diarias continuadas",
-    featured: false
-  },
-  {
-    id: 6,
-    name: "Expediciones en Kayak Humedales de Maullín",
-    category: "excursionismo",
-    categoryName: "Excursionismo & Aventura",
-    image: "/images/posts/15457.webp",
-    location: "Sector La Pasada",
-    description: "Travesías en kayak de travesía y stand up paddle (SUP) por los bosques hundidos. Guías certificados en rescate en aguas abiertas y flora nativa.",
-    phone: "+56 9 6632 8812",
-    hours: "Temporada permanente",
-    featured: false
   }
 ]
 
@@ -209,69 +149,96 @@ export default function EmprendimientosPage() {
           </div>
         </div>
 
-        {/* DIRECTORY GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
-            <div 
-              key={item.id}
-              className={`bg-white rounded-2xl shadow-xs border overflow-hidden flex flex-col justify-between transition-all duration-200 group hover:shadow-md ${
-                item.featured ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-200'
-              }`}
-            >
-              <div>
-                <div className="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    loading="lazy"
-                    onError={(e) => { e.target.src = '/images/default-news.webp' }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 left-2.5 bg-[#002b49]/90 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded shadow-xs">
-                    {item.categoryName}
-                  </span>
-                  {item.featured && (
-                    <span className="absolute top-2.5 right-2.5 bg-amber-400 text-slate-900 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-slate-900" /> Destacado
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-5 space-y-3">
-                  <h3 className="font-bold text-slate-900 text-lg font-serif group-hover:text-sky-700 transition-colors">
-                    {item.name}
-                  </h3>
-
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <MapPin className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                    <span>{item.location}</span>
-                  </div>
-
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                    {item.description}
-                  </p>
-
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
-                    <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>{item.hours}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 pt-0">
-                <a
-                  href={`https://wa.me/56995104318?text=Hola,%20vi%20su%20contacto%20en%20Ultimo%20Bastion%20Maullin:%20${encodeURIComponent(item.name)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-xs"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Contactar Emprendimiento</span>
-                </a>
-              </div>
+        {/* DIRECTORY GRID OR EMPTY STATE */}
+        {filteredItems.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center space-y-4 max-w-lg mx-auto shadow-2xs">
+            <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <Store className="w-7 h-7 text-emerald-600" />
             </div>
-          ))}
-        </div>
+            <div className="space-y-1.5">
+              <h3 className="font-serif font-bold text-slate-800 text-lg sm:text-xl">
+                Próximamente más emprendimientos
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
+                Aún no hay negocios registrados en esta categoría. Si eres dueño de un emprendimiento, hospedaje o servicio en Maullín, ¡sumalo gratis a la vitrina oficial!
+              </p>
+            </div>
+            <div className="pt-2">
+              <a
+                href="https://wa.me/56995104318?text=Hola,%20quisiera%20registrar%20mi%20emprendimiento%20en%20Ultimo%20Bastion%20Maullin"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-[#05a353] hover:bg-[#048a46] text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs transition-transform hover:scale-105"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Inscribir mi emprendimiento gratis</span>
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map((item) => (
+              <div 
+                key={item.id}
+                className={`bg-white rounded-2xl shadow-xs border overflow-hidden flex flex-col justify-between transition-all duration-200 group hover:shadow-md ${
+                  item.featured ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-200'
+                }`}
+              >
+                <div>
+                  <div className="aspect-[16/10] overflow-hidden bg-slate-100 relative">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      loading="lazy"
+                      onError={(e) => { e.target.src = '/images/default-news.webp' }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-2.5 left-2.5 bg-[#002b49]/90 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded shadow-xs">
+                      {item.categoryName}
+                    </span>
+                    {item.featured && (
+                      <span className="absolute top-2.5 right-2.5 bg-amber-400 text-slate-900 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-slate-900" /> Destacado
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-5 space-y-3">
+                    <h3 className="font-bold text-slate-900 text-lg font-serif group-hover:text-sky-700 transition-colors">
+                      {item.name}
+                    </h3>
+
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <MapPin className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                      <span>{item.location}</span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                      {item.description}
+                    </p>
+
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span>{item.hours}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 pt-0">
+                  <a
+                    href={`https://wa.me/56995104318?text=Hola,%20vi%20su%20contacto%20en%20Ultimo%20Bastion%20Maullin:%20${encodeURIComponent(item.name)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Contactar Emprendimiento</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
