@@ -575,87 +575,144 @@ export default function MapasPage() {
       </div>
 
       {/* ----------------------------------------------------
-          AUTHENTIC CARTOGRAPHY GALLERY (15 REAL MAPS)
+          AUTHENTIC CARTOGRAPHY GALLERY (15 REAL MAPS - FULL WIDTH STACKED)
       ---------------------------------------------------- */}
-      <section id="mubm-galeria" className="max-w-6xl mx-auto px-4 pt-16 space-y-6">
-        <div className="border-b border-slate-200 pb-5">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 px-3 py-1 rounded-full mb-2">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Colección Cartográfica Oficial</span>
+      <section id="mubm-galeria" className="max-w-[1380px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-20 space-y-8">
+        {/* Section Header */}
+        <div className="border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 px-3 py-1 rounded-full mb-2.5 border border-sky-100">
+              <Layers className="w-3.5 h-3.5" />
+              <span>Colección Cartográfica Oficial</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-950 font-serif tracking-tight">
+              15 Láminas de Mapas y Cartografía Histórica
+            </h2>
+            <p className="mt-2 text-slate-600 text-sm sm:text-base max-w-3xl leading-relaxed">
+              Exhibición completa de mapas históricos, cartas hidrográficas y levantamientos oficiales de la cuenca del Río Maullín en alta definición. Cada lámina se presenta a pantalla completa para facilitar su lectura y estudio detallado.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-950 font-serif">
-            15 Láminas de Mapas y Cartografía Histórica
-          </h2>
-          <p className="mt-2 text-slate-600 text-sm sm:text-base max-w-3xl">
-            Galería completa de láminas geográficas, planos históricos de la Armada, cartas de navegación y registros territoriales de la Cuenca del Río Maullín, preservados en alta resolución.
-          </p>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+              15 Mapas Documentados
+            </span>
+          </div>
         </div>
 
-        {/* 15 MAPS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* QUICK JUMP PILLS (LÁMINAS I A XV) */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-1">
+            <span className="flex items-center gap-1.5">
+              <Compass className="w-3.5 h-3.5 text-sky-600" />
+              <span>Navegación Rápida por Láminas:</span>
+            </span>
+            <span className="text-[11px] text-slate-400 font-normal lowercase">haz clic para saltar al mapa</span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {authenticMaps.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => scrollToSection(`mapa-lamina-${m.id}`)}
+                className="shrink-0 text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-700 border border-slate-200 hover:border-sky-300 transition-colors cursor-pointer"
+                title={m.title}
+              >
+                Lámina {m.roman}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 15 FULL-WIDTH MAP CARDS (ONE BELOW THE OTHER) */}
+        <div className="space-y-12 sm:space-y-16">
           {authenticMaps.map((mapItem) => (
-            <div
+            <article
               key={mapItem.id}
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all group"
+              id={`mapa-lamina-${mapItem.id}`}
+              className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden scroll-mt-24"
             >
-              <div>
-                {/* Image Card Container with Click to Lightbox */}
-                <div
-                  onClick={() => setActiveModalMap(mapItem)}
-                  className="aspect-[4/3] bg-slate-950 relative overflow-hidden cursor-pointer"
-                >
-                  <img
-                    src={mapItem.image}
-                    alt={mapItem.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="bg-white/95 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-full flex items-center gap-2 shadow-lg transform translate-y-1 group-hover:translate-y-0 transition-transform">
-                      <Maximize2 className="w-4 h-4 text-sky-600" />
-                      <span>Ampliar en alta resolución</span>
+              {/* Card Header Bar */}
+              <div className="p-4 sm:p-6 bg-gradient-to-r from-slate-50 via-white to-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-sky-800 bg-sky-100/80 border border-sky-200 px-3 py-1 rounded-full">
+                      <MapIcon className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Lámina {mapItem.roman}</span>
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                      • Documento Cartográfico Oficial
                     </span>
                   </div>
-
-                  <span className="absolute top-3 left-3 bg-[#002238]/90 text-amber-300 text-xs font-mono font-bold px-2.5 py-1 rounded-md shadow-xs">
-                    Lámina {mapItem.roman}
-                  </span>
-                </div>
-
-                {/* Info Text */}
-                <div className="p-5 space-y-2">
-                  <h3 className="font-serif font-bold text-slate-950 text-base leading-snug group-hover:text-sky-700 transition-colors">
+                  <h3 className="text-lg sm:text-2xl font-black font-serif text-slate-950 tracking-tight">
                     {mapItem.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-4xl leading-relaxed">
                     {mapItem.description}
                   </p>
                 </div>
+
+                {/* Header Actions */}
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalMap(mapItem)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 transition-all cursor-pointer shadow-2xs"
+                    title="Abrir en pantalla completa"
+                  >
+                    <Maximize2 className="w-4 h-4 text-sky-600" />
+                    <span>Ampliar Pantalla Completa</span>
+                  </button>
+
+                  <a
+                    href={mapItem.image}
+                    download={`Maullin_Mapa_${mapItem.id}.jpeg`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-50 border border-slate-300 transition-all shadow-2xs"
+                    title="Descargar lámina en alta resolución"
+                  >
+                    <Download className="w-4 h-4 text-slate-500" />
+                    <span className="hidden sm:inline">Descargar HD</span>
+                  </a>
+                </div>
               </div>
 
-              {/* Actions Footer */}
-              <div className="px-5 pb-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              {/* Full-Width Uncropped Map Frame */}
+              <div
+                onClick={() => setActiveModalMap(mapItem)}
+                className="relative w-full bg-slate-950/5 flex items-center justify-center p-2 sm:p-5 group cursor-zoom-in overflow-hidden border-b border-slate-100"
+              >
+                <img
+                  src={mapItem.image}
+                  alt={mapItem.title}
+                  loading="lazy"
+                  className="w-full h-auto max-h-[88vh] object-contain rounded-xl sm:rounded-2xl shadow-xs transition-transform duration-300 group-hover:scale-[1.008]"
+                />
+
+                {/* Floating Cue on Hover */}
+                <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-xs pointer-events-none">
+                  <Maximize2 className="w-4 h-4 text-sky-400" />
+                  <span>Click para ver en alta resolución</span>
+                </div>
+              </div>
+
+              {/* Card Footer Bar */}
+              <div className="px-5 py-3 bg-slate-50/70 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2 font-mono">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Archivo Patrimonial • Cuenca del Río Maullín</span>
+                </span>
                 <button
                   type="button"
                   onClick={() => setActiveModalMap(mapItem)}
-                  className="font-bold text-sky-700 hover:text-sky-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-sky-700 hover:text-sky-900 font-bold font-sans flex items-center gap-1 cursor-pointer"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Ver lámina completa</span>
+                  <span>Explorar lámina interactiva</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-
-                <a
-                  href={mapItem.image}
-                  download={`Maullin_Mapa_${mapItem.id}.jpeg`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-                  title="Descargar lámina en alta resolución"
-                >
-                  <Download className="w-4 h-4" />
-                </a>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </section>
