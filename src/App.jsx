@@ -48,18 +48,22 @@ function LegacyUrlRedirector() {
 
 export default function App() {
   const location = useLocation()
-  const isAdminRoute = location.pathname.startsWith('/admin') || 
-                       location.pathname.startsWith('/panel-privado') || 
-                       location.pathname.startsWith('/panel-gestion-bastion')
+  const currentPath = (location.pathname || '').toLowerCase().replace(/\/$/, '')
+  const isAdminRoute = currentPath === '/admin' || 
+                       currentPath.startsWith('/admin/') || 
+                       currentPath === '/wp-admin' || 
+                       currentPath.startsWith('/wp-admin/') || 
+                       currentPath === '/wp-login.php' || 
+                       currentPath === '/panel-privado' || 
+                       currentPath.startsWith('/panel-privado/') || 
+                       currentPath === '/panel-gestion-bastion' || 
+                       currentPath.startsWith('/panel-gestion-bastion/')
 
   // If on private admin route, render minimalist standalone admin without public headers/footers
   if (isAdminRoute) {
     return (
       <Routes>
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/panel-privado" element={<AdminPage />} />
-        <Route path="/panel-gestion-bastion" element={<AdminPage />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route path="*" element={<AdminPage />} />
       </Routes>
     )
   }

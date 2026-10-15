@@ -5,7 +5,7 @@ import {
 } from './SocialIcons'
 import { 
   ArrowUp, CheckCircle2, ArrowRight, Landmark, Building2, 
-  MapPin, Waves, Radio, Link2 
+  MapPin, Waves, Radio, Link2, Lock 
 } from 'lucide-react'
 
 const recommendedSites = [
@@ -220,6 +220,15 @@ export default function Footer() {
             <span>|</span>
             <Link to="/quienes-somos" className="hover:text-slate-600 transition-colors">
               Accesibilidad
+            </Link>
+            <span>|</span>
+            <Link 
+              to="/admin" 
+              className="hover:text-slate-700 text-slate-400 transition-colors inline-flex items-center gap-1"
+              title="Panel Editorial"
+            >
+              <Lock className="w-2.5 h-2.5" />
+              <span>Redacción</span>
             </Link>
           </div>
 
