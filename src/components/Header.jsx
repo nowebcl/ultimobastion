@@ -6,7 +6,7 @@ import {
   Play, Pause, Volume2, VolumeX
 } from 'lucide-react'
 import { InstagramIcon, YoutubeIcon } from './SocialIcons'
-import { getCategories, searchPosts } from '../utils/postsService'
+import { getCategories, searchPosts, getPostUrl } from '../utils/postsService'
 import { useRadio } from '../context/RadioContext'
 
 export default function Header() {
@@ -159,7 +159,7 @@ export default function Header() {
                     {searchResults.map((p) => (
                       <Link
                         key={p.id}
-                        to={`/noticia/${p.slug}`}
+                        to={getPostUrl(p)}
                         onClick={() => setSearchOpen(false)}
                         className="flex items-center gap-2.5 p-2.5 hover:bg-slate-50 transition-colors"
                       >

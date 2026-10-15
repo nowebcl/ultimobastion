@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   Store, Utensils, Hotel, Bus, Anchor, Mountain, 
@@ -81,9 +81,34 @@ const directoryItems = [
   }
 ]
 
+import { getDbEmprendimientos, getPocketBaseFileUrl } from '../utils/pocketbase'
+
 export default function EmprendimientosPage() {
   const [selectedCat, setSelectedCat] = useState('todos')
   const [searchTerm, setSearchTerm] = useState('')
+  const [items, setItems] = useState(directoryItems)
+
+  useEffect(() => {
+    let cancelled = false
+    getDbEmprendimientos().then(records => {
+      if (!cancelled && records && records.length > 0) {
+        const liveItems = records.map(r => ({
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          categoryName: r.categoryName || r.category,
+          image: r.image ? getPocketBaseFileUrl('emprendimientos', r.id, r.image) : (directoryItems.find(d => d.name === r.name)?.image || '/images/default-news.webp'),
+          location: r.location || 'Maullín',
+          description: r.description || '',
+          phone: r.phone || '+56 9 9510 4318',
+          hours: r.hours || 'Atención continuada',
+          featured: Boolean(r.featured)
+        }))
+        setItems(liveItems)
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
 
   const categories = [
     { id: 'todos', name: 'Todos los Rubros', icon: Store },
@@ -95,7 +120,7 @@ export default function EmprendimientosPage() {
     { id: 'excursionismo', name: 'Excursionismo & Guiados', icon: Mountain }
   ]
 
-  const filteredItems = directoryItems.filter(item => {
+  const filteredItems = items.filter(item => {
     const matchesCat = selectedCat === 'todos' || item.category === selectedCat
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||

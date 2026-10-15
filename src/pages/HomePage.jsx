@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   Play, Calendar, Eye, Clock, ArrowRight, X 
@@ -7,7 +7,8 @@ import BreakingTicker from '../components/BreakingTicker'
 import { 
   getAllPostsIndex,
   formatDate,
-  formatTimeAgo
+  formatTimeAgo,
+  getPostUrl
 } from '../utils/postsService'
 
 // Static data for multimedia and gallery from Maullín
@@ -89,6 +90,13 @@ const getCategoryColor = (post, index) => {
 
 export default function HomePage() {
   const [activeVideo, setActiveVideo] = useState(null)
+  const [, setVersion] = useState(0)
+
+  useEffect(() => {
+    const handleUpdate = () => setVersion(v => v + 1)
+    window.addEventListener('bastion:posts-updated', handleUpdate)
+    return () => window.removeEventListener('bastion:posts-updated', handleUpdate)
+  }, [])
 
   const allPosts = getAllPostsIndex()
   const featuredLead = allPosts[0]
@@ -168,7 +176,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Title */}
-                <Link to={`/noticia/${featuredLead?.slug || '#'}`}>
+                <Link to={featuredLead ? getPostUrl(featuredLead) : '#'}>
                   <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-white font-serif leading-[1.25] tracking-tight group-hover:text-amber-200 transition-colors drop-shadow-sm">
                     {featuredLead?.title}
                   </h1>
@@ -196,7 +204,7 @@ export default function HomePage() {
                   </div>
 
                   <Link
-                    to={`/noticia/${featuredLead?.slug || '#'}`}
+                    to={featuredLead ? getPostUrl(featuredLead) : '#'}
                     className="rounded-full border border-white/50 bg-black/25 hover:bg-white hover:text-slate-900 text-white px-5 py-2 text-xs font-semibold flex items-center gap-2 backdrop-blur-xs transition-all shadow-xs"
                   >
                     <span>Leer más</span>
@@ -232,7 +240,7 @@ export default function HomePage() {
                 {secondaryFeatured.map((item, index) => (
                   <article key={item.id || index} className="pt-3.5 first:pt-0 flex items-start gap-3.5 group cursor-pointer">
                     <Link 
-                      to={`/noticia/${item.slug}`}
+                      to={getPostUrl(item)}
                       className="w-24 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden shrink-0 bg-slate-100 relative shadow-2xs"
                     >
                       <img
@@ -250,7 +258,7 @@ export default function HomePage() {
                       <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${getCategoryColor(item, index)}`}>
                         {getDisplayCategory(item)}
                       </span>
-                      <Link to={`/noticia/${item.slug}`}>
+                      <Link to={getPostUrl(item)}>
                         <h3 className="font-serif font-bold text-xs sm:text-[13px] text-slate-900 group-hover:text-sky-700 transition-colors line-clamp-2 leading-snug">
                           {item.title}
                         </h3>
@@ -276,7 +284,7 @@ export default function HomePage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: SALUD */}
           <article className="group cursor-pointer">
-            <Link to={`/noticia/${row1Salud?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
+            <Link to={getPostUrl(row1Salud)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
               <img
                 src={row1Salud?.image}
                 alt={row1Salud?.title}
@@ -287,7 +295,7 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
               SALUD
             </span>
-            <Link to={`/noticia/${row1Salud?.slug}`}>
+            <Link to={getPostUrl(row1Salud)}>
               <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
                 {row1Salud?.title}
               </h3>
@@ -302,7 +310,7 @@ export default function HomePage() {
 
           {/* Card 2: DEPORTES */}
           <article className="group cursor-pointer">
-            <Link to={`/noticia/${row1Deportes?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
+            <Link to={getPostUrl(row1Deportes)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
               <img
                 src={row1Deportes?.image}
                 alt={row1Deportes?.title}
@@ -313,7 +321,7 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
               DEPORTES
             </span>
-            <Link to={`/noticia/${row1Deportes?.slug}`}>
+            <Link to={getPostUrl(row1Deportes)}>
               <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
                 {row1Deportes?.title}
               </h3>
@@ -328,7 +336,7 @@ export default function HomePage() {
 
           {/* Card 3: CULTURA */}
           <article className="group cursor-pointer">
-            <Link to={`/noticia/${row1Cultura?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
+            <Link to={getPostUrl(row1Cultura)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
               <img
                 src={row1Cultura?.image}
                 alt={row1Cultura?.title}
@@ -339,7 +347,7 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
               CULTURA
             </span>
-            <Link to={`/noticia/${row1Cultura?.slug}`}>
+            <Link to={getPostUrl(row1Cultura)}>
               <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
                 {row1Cultura?.title}
               </h3>
@@ -361,7 +369,7 @@ export default function HomePage() {
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider font-serif">COMUNA</h3>
             </div>
-            <Link to={`/noticia/${row2Comuna?.slug}`} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+            <Link to={getPostUrl(row2Comuna)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
               <img
                 src={row2Comuna?.image}
                 alt={row2Comuna?.title}
@@ -369,7 +377,7 @@ export default function HomePage() {
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <Link to={`/noticia/${row2Comuna?.slug}`}>
+            <Link to={getPostUrl(row2Comuna)}>
               <h4 className="font-serif font-bold text-[13px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                 {row2Comuna?.title}
               </h4>
@@ -388,7 +396,7 @@ export default function HomePage() {
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider font-serif">MEDIO AMBIENTE</h3>
             </div>
-            <Link to={`/noticia/${row2MedioAmbiente?.slug}`} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+            <Link to={getPostUrl(row2MedioAmbiente)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
               <img
                 src={row2MedioAmbiente?.image}
                 alt={row2MedioAmbiente?.title}
@@ -396,7 +404,7 @@ export default function HomePage() {
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <Link to={`/noticia/${row2MedioAmbiente?.slug}`}>
+            <Link to={getPostUrl(row2MedioAmbiente)}>
               <h4 className="font-serif font-bold text-[13px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                 {row2MedioAmbiente?.title}
               </h4>
@@ -415,7 +423,7 @@ export default function HomePage() {
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider font-serif">COMUNIDAD</h3>
             </div>
-            <Link to={`/noticia/${row2Comunidad?.slug}`} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+            <Link to={getPostUrl(row2Comunidad)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
               <img
                 src={row2Comunidad?.image}
                 alt={row2Comunidad?.title}
@@ -423,7 +431,7 @@ export default function HomePage() {
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <Link to={`/noticia/${row2Comunidad?.slug}`}>
+            <Link to={getPostUrl(row2Comunidad)}>
               <h4 className="font-serif font-bold text-[13px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                 {row2Comunidad?.title}
               </h4>
@@ -442,7 +450,7 @@ export default function HomePage() {
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider font-serif">TURISMO</h3>
             </div>
-            <Link to={`/noticia/${row2Turismo?.slug}`} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+            <Link to={getPostUrl(row2Turismo)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
               <img
                 src={row2Turismo?.image}
                 alt={row2Turismo?.title}
@@ -450,7 +458,7 @@ export default function HomePage() {
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <Link to={`/noticia/${row2Turismo?.slug}`}>
+            <Link to={getPostUrl(row2Turismo)}>
               <h4 className="font-serif font-bold text-[13px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                 {row2Turismo?.title}
               </h4>
@@ -479,7 +487,7 @@ export default function HomePage() {
               {row3MasNoticias.map((item) => (
                 <article key={item.id} className="pt-3 first:pt-0 pb-3 flex items-start gap-3 group cursor-pointer">
                   <Link 
-                    to={`/noticia/${item.slug}`}
+                    to={getPostUrl(item)}
                     className="w-16 h-14 rounded-lg overflow-hidden shrink-0 bg-slate-100 relative shadow-2xs"
                   >
                     <img
@@ -490,7 +498,7 @@ export default function HomePage() {
                     />
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/noticia/${item.slug}`}>
+                    <Link to={getPostUrl(item)}>
                       <h4 className="font-serif font-bold text-xs text-slate-900 group-hover:text-sky-700 transition-colors line-clamp-2 leading-tight">
                         {item.title}
                       </h4>
@@ -513,7 +521,7 @@ export default function HomePage() {
               </h3>
             </div>
             <article className="group cursor-pointer">
-              <Link to={`/noticia/${row3Destacado?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-3 shadow-2xs">
+              <Link to={getPostUrl(row3Destacado)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-3 shadow-2xs">
                 <img
                   src={row3Destacado?.image}
                   alt={row3Destacado?.title}
@@ -521,7 +529,7 @@ export default function HomePage() {
                   onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/site/hero-landscape-clean.webp' }}
                 />
               </Link>
-              <Link to={`/noticia/${row3Destacado?.slug}`}>
+              <Link to={getPostUrl(row3Destacado)}>
                 <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900 leading-snug group-hover:text-sky-700 transition-colors mb-2">
                   {row3Destacado?.title}
                 </h3>
@@ -585,7 +593,7 @@ export default function HomePage() {
               </h3>
             </div>
             <article className="group cursor-pointer">
-              <Link to={`/noticia/${row4Deportes?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+              <Link to={getPostUrl(row4Deportes)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
                 <img
                   src={row4Deportes?.image}
                   alt={row4Deportes?.title}
@@ -593,7 +601,7 @@ export default function HomePage() {
                   onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
                 />
               </Link>
-              <Link to={`/noticia/${row4Deportes?.slug}`}>
+              <Link to={getPostUrl(row4Deportes)}>
                 <h4 className="font-serif font-bold text-sm text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                   {row4Deportes?.title}
                 </h4>
@@ -616,7 +624,7 @@ export default function HomePage() {
               </h3>
             </div>
             <article className="group cursor-pointer">
-              <Link to={`/noticia/${row4Cultura?.slug}`} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+              <Link to={getPostUrl(row4Cultura)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
                 <img
                   src={row4Cultura?.image}
                   alt={row4Cultura?.title}
@@ -624,7 +632,7 @@ export default function HomePage() {
                   onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
                 />
               </Link>
-              <Link to={`/noticia/${row4Cultura?.slug}`}>
+              <Link to={getPostUrl(row4Cultura)}>
                 <h4 className="font-serif font-bold text-sm text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
                   {row4Cultura?.title}
                 </h4>

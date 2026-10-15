@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Flame, ChevronRight } from 'lucide-react'
+import { getPostUrl } from '../utils/postsService'
 
 export default function BreakingTicker({ posts = [] }) {
   if (!posts || posts.length === 0) return null
@@ -23,7 +24,7 @@ export default function BreakingTicker({ posts = [] }) {
             {tickerPosts.concat(tickerPosts).map((post, idx) => (
               <Link
                 key={`${post.id}-${idx}`}
-                to={`/noticia/${post.slug}`}
+                to={getPostUrl(post)}
                 className="hover:text-amber-400 transition-colors flex items-center gap-2 group"
               >
                 <span className="text-slate-400 font-mono text-[11px]">

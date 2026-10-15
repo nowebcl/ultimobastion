@@ -54,16 +54,39 @@
   animation-play-state: paused;
 }
 
-/* Article rich text formatting - Zero unwanted whitespace */
+/* Article rich text formatting - Dynamic text scaling for usability */
 .article-content {
   overflow-wrap: break-word;
+  --article-font-size: 1.0625rem;
+  --article-line-height: 1.75;
+}
+
+.article-content.font-size-sm {
+  --article-font-size: 0.9375rem;
+  --article-line-height: 1.65;
+}
+
+.article-content.font-size-base {
+  --article-font-size: 1.0625rem;
+  --article-line-height: 1.75;
+}
+
+.article-content.font-size-lg {
+  --article-font-size: 1.25rem;
+  --article-line-height: 1.8;
+}
+
+.article-content.font-size-xl {
+  --article-font-size: 1.4375rem;
+  --article-line-height: 1.85;
 }
 
 .article-content p {
   margin-bottom: 1rem;
-  line-height: 1.75;
-  font-size: 1.0625rem;
+  line-height: var(--article-line-height, 1.75);
+  font-size: var(--article-font-size, 1.0625rem);
   color: #334155;
+  transition: font-size 0.2s ease, line-height 0.2s ease;
 }
 
 .article-content p:empty,

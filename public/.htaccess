@@ -1,0 +1,32 @@
+# Apache / LiteSpeed rewrite rules for El Último Bastión SPA
+# Permite que todos los enlaces antiguos de WordPress y Facebook funcionen sin 404
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Don't rewrite index.html
+  RewriteRule ^index\.html$ - [L]
+
+  # Serve existing physical files and folders directly (images, audio, assets)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Rewrite all date-based permalinks (e.g. /2026/10/06/slug/) and SPA routes to index.html
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Compresión Gzip para carga ultra-rápida
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# Caché en navegador para activos estáticos
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType audio/mpeg "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+</IfModule>

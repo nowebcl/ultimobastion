@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { 
   Calendar, User, Clock, Share2, 
   MessageCircle, Link as LinkIcon, Check, ArrowLeft, 
   ArrowRight, Bookmark, ThumbsUp, Tag, ChevronRight, ChevronLeft, Eye,
-  Volume2, VolumeX, Play, Pause, BookmarkCheck, Heart, Sparkles, BookOpen, X,
+  Play, Pause, Square, Volume2, VolumeX, RotateCcw,
+  BookmarkCheck, Heart, Sparkles, BookOpen, X,
   Camera, Maximize2
 } from 'lucide-react'
 import { FacebookIcon, TwitterIcon } from '../components/SocialIcons'
@@ -14,13 +15,70 @@ import {
   getRelatedPosts, 
   getAllPostsIndex, 
   formatDate, 
-  formatTimeAgo 
+  formatTimeAgo,
+  getPostUrl
 } from '../utils/postsService'
 import NewsCard from '../components/NewsCard'
 import { useRadio } from '../context/RadioContext'
 
+// Helper to extract clean speakable text from post title, excerpt, and body
+function extractReadableText(post) {
+  if (!post) return ''
+  const parts = []
+  if (post.title) parts.push(post.title)
+  if (post.excerpt) parts.push(post.excerpt)
+  if (post.content) {
+    const cleanContent = post.content
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#8211;|&#8212;/g, '—')
+      .replace(/&#8220;|&#8221;/g, '"')
+      .replace(/&#8216;|&#8217;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (cleanContent) parts.push(cleanContent)
+  }
+  return parts.join('. ')
+}
+
+// Split text into digestible sentence chunks for uninterrupted browser speech
+function splitTextIntoSentences(text) {
+  if (!text) return []
+  const rawSentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text]
+  const chunks = []
+  for (const s of rawSentences) {
+    const trimmed = s.trim()
+    if (!trimmed) continue
+    if (trimmed.length <= 200) {
+      chunks.push(trimmed)
+    } else {
+      const parts = trimmed.match(/.{1,180}(\s|$)/g) || [trimmed]
+      for (const p of parts) {
+        const pt = p.trim()
+        if (pt) chunks.push(pt)
+      }
+    }
+  }
+  return chunks
+}
+
+// Format seconds into MM:SS
+function formatAudioTime(seconds) {
+  if (isNaN(seconds) || seconds < 0) return '0:00'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s < 10 ? '0' : ''}${s}`
+}
+
 export default function PostDetailPage() {
-  const { slug } = useParams()
+  const params = useParams()
+  const [searchParams] = useSearchParams()
+  const rawSlug = params.slug || searchParams.get('p') || searchParams.get('id') || searchParams.get('post')
+  const slug = rawSlug ? rawSlug.replace(/\/$/, '') : ''
   const navigate = useNavigate()
 
   const { isPlaying: isRadioPlaying, togglePlay: toggleRadio } = useRadio()
@@ -28,16 +86,82 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [fontSize, setFontSize] = useState('text-base sm:text-lg') // comfortable sizes
+  const [fontSize, setFontSize] = useState('font-size-base')
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false)
   const [liked, setLiked] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [likesCount, setLikesCount] = useState(48)
   const [selectedLightboxIndex, setSelectedLightboxIndex] = useState(null)
   
+  // 100% REAL HUMAN NEURAL MP3 AUDIO STATE
+  const [hasMp3Audio, setHasMp3Audio] = useState(false)
+  const [mp3Playing, setMp3Playing] = useState(false)
+  const [mp3Duration, setMp3Duration] = useState(0)
+  const [mp3CurrentTime, setMp3CurrentTime] = useState(0)
+  const audioRef = useRef(null)
+
+  // BROWSER TEXT-TO-SPEECH (LECTOR EN VOZ ALTA SINTETIZADOR) STATE
+  const [speechStatus, setSpeechStatus] = useState('idle') // 'idle' | 'playing' | 'paused'
+  const [speechRate, setSpeechRate] = useState(1.0)
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0)
+  const [totalChunks, setTotalChunks] = useState(0)
+  const chunksRef = useRef([])
+  const currentChunkIndexRef = useRef(0)
+  const speechRateRef = useRef(1.0)
+  const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
+
   const articleContentRef = useRef(null)
   const allPosts = useMemo(() => getAllPostsIndex(), [])
+
+  // Check if article has human neural MP3 pre-rendered
+  useEffect(() => {
+    if (!slug) return
+    let active = true
+    const testUrl = `/audio/posts/${slug}.mp3`
+    
+    fetch(testUrl, { method: 'HEAD' })
+      .then(res => {
+        const cType = res.headers.get('content-type') || ''
+        // In Vite / SPAs, non-existent assets return 200 with text/html fallback
+        const isAudio = res.ok && !cType.includes('text/html') && (cType.includes('audio') || cType.includes('mpeg') || cType === '')
+        if (active) {
+          setHasMp3Audio(Boolean(isAudio))
+        }
+      })
+      .catch(() => {
+        if (active) setHasMp3Audio(false)
+      })
+
+    return () => {
+      active = false
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
+  }, [slug])
+
+  // Keep speech rate ref in sync
+  useEffect(() => {
+    speechRateRef.current = speechRate
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speechRate
+    }
+  }, [speechRate])
+
+  // Preload voices and cancel speech on unmount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices()
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices()
+      }
+    }
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
 
   // Reading scroll progress tracker
   useEffect(() => {
@@ -69,8 +193,15 @@ export default function PostDetailPage() {
   // Instant 0ms Load Post: First render instantly from memory, then enrich with ~8KB content
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
-    setIsAudioPlaying(false)
     setSelectedLightboxIndex(null)
+
+    // Stop and reset audio reader on navigation
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+    }
+    setSpeechStatus('idle')
+    setCurrentChunkIndex(0)
+    currentChunkIndexRef.current = 0
 
     // 1. Instant synchronous render (0 milliseconds!)
     const instantPost = getPostIndexBySlug(slug)
@@ -115,16 +246,38 @@ export default function PostDetailPage() {
       }
     }
 
-    // Remove giant consecutive <figure> blocks and standalone img tags so textual article reads smoothly and compactly
-    let textHtml = rawContent
-      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '')
-      .replace(/<p>\s*(?:<a[^>]*>)?\s*<img[^>]*>\s*(?:<\/a>)?\s*<\/p>/gi, '')
-      .replace(/<img[^>]+>/gi, '')
-      .trim()
+    // Include post.gallery images (e.g. additional uploaded images from PocketBase)
+    if (post.gallery && Array.isArray(post.gallery)) {
+      post.gallery.forEach(src => {
+        if (src && !seen.has(src)) {
+          seen.add(src)
+          images.push(src)
+        }
+      })
+    }
 
-    // Fallback if removing figures stripped all content
-    if (!textHtml || textHtml.replace(/<[^>]+>/g, '').trim().length === 0) {
-      textHtml = rawContent
+    let textHtml = rawContent
+
+    // If story is plain text (pasted without HTML tags), wrap into clean paragraphs
+    if (!/<[a-z][\s\S]*>/i.test(textHtml)) {
+      textHtml = textHtml
+        .split(/\n\s*\n/)
+        .map(p => p.trim())
+        .filter(Boolean)
+        .map(p => `<p class="mb-4 leading-relaxed">${p.replace(/\n/g, '<br/>')}</p>`)
+        .join('')
+    } else {
+      // Remove giant consecutive <figure> blocks and standalone img tags so textual article reads smoothly and compactly
+      textHtml = textHtml
+        .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '')
+        .replace(/<p>\s*(?:<a[^>]*>)?\s*<img[^>]*>\s*(?:<\/a>)?\s*<\/p>/gi, '')
+        .replace(/<img[^>]+>/gi, '')
+        .trim()
+
+      // Fallback if removing figures stripped all content
+      if (!textHtml || textHtml.replace(/<[^>]+>/g, '').trim().length === 0) {
+        textHtml = rawContent
+      }
     }
 
     return { cleanTextHtml: textHtml, galleryImages: images }
@@ -162,6 +315,147 @@ export default function PostDetailPage() {
     return base > 999 ? `${(base / 1000).toFixed(1)}K` : `${base}`
   }, [post])
 
+  // ----------------------------------------------------
+  // REAL WEB SPEECH API (LECTURA EN VOZ ALTA) HANDLERS
+  // ----------------------------------------------------
+  const speakChunk = useCallback((index) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    const chunks = chunksRef.current
+    if (index >= chunks.length) {
+      setSpeechStatus('idle')
+      setCurrentChunkIndex(0)
+      currentChunkIndexRef.current = 0
+      return
+    }
+
+    currentChunkIndexRef.current = index
+    setCurrentChunkIndex(index)
+    setSpeechStatus('playing')
+
+    window.speechSynthesis.cancel()
+
+    const textToSpeak = chunks[index]
+    const utter = new SpeechSynthesisUtterance(textToSpeak)
+    utter.lang = 'es-CL'
+    utter.rate = speechRateRef.current
+
+    // Detect best voice in Spanish (prioritizing Natural/Neural human voices over robotic desktop voices)
+    const voices = window.speechSynthesis.getVoices()
+    if (voices && voices.length > 0) {
+      const spanishVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('es'))
+      
+      const naturalVoice = spanishVoices.find(v => 
+        v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online')
+      )
+      const googleVoice = spanishVoices.find(v => 
+        v.name.toLowerCase().includes('google')
+      )
+      const chileanVoice = spanishVoices.find(v => v.lang === 'es-CL')
+      const latamVoice = spanishVoices.find(v => v.lang === 'es-419' || v.lang === 'es-MX' || v.lang === 'es-US')
+      const anySpanish = spanishVoices[0]
+
+      const chosenVoice = naturalVoice || googleVoice || chileanVoice || latamVoice || anySpanish
+      if (chosenVoice) {
+        utter.voice = chosenVoice
+      }
+    }
+
+    utter.onend = () => {
+      const nextIndex = index + 1
+      if (nextIndex < chunksRef.current.length) {
+        speakChunk(nextIndex)
+      } else {
+        setSpeechStatus('idle')
+        setCurrentChunkIndex(0)
+        currentChunkIndexRef.current = 0
+      }
+    }
+
+    utter.onerror = (e) => {
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        console.warn('SpeechSynthesis error:', e)
+        setSpeechStatus('idle')
+      }
+    }
+
+    window.speechSynthesis.speak(utter)
+  }, [])
+
+  const handleToggleSpeech = () => {
+    // 1. If real human MP3 audio is available, control HTML5 audio element
+    if (hasMp3Audio && audioRef.current) {
+      if (isRadioPlaying && toggleRadio) {
+        toggleRadio()
+      }
+      if (mp3Playing) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play().catch(e => console.warn('Audio play error:', e))
+      }
+      return
+    }
+
+    // 2. Fallback to Web Speech API
+    if (!isSpeechSupported || !post) return
+
+    // Pause online radio if playing to avoid audio conflict
+    if (isRadioPlaying && toggleRadio) {
+      toggleRadio()
+    }
+
+    if (speechStatus === 'playing') {
+      window.speechSynthesis.pause()
+      setSpeechStatus('paused')
+      return
+    }
+
+    if (speechStatus === 'paused') {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume()
+        setSpeechStatus('playing')
+      } else {
+        speakChunk(currentChunkIndexRef.current)
+      }
+      return
+    }
+
+    // Start from beginning
+    const fullText = extractReadableText(post)
+    const chunks = splitTextIntoSentences(fullText)
+    if (chunks.length === 0) return
+
+    chunksRef.current = chunks
+    setTotalChunks(chunks.length)
+    speakChunk(0)
+  }
+
+  const handleStopSpeech = () => {
+    if (hasMp3Audio && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      setMp3Playing(false)
+      setMp3CurrentTime(0)
+      return
+    }
+
+    if (!isSpeechSupported) return
+    window.speechSynthesis.cancel()
+    setSpeechStatus('idle')
+    setCurrentChunkIndex(0)
+    currentChunkIndexRef.current = 0
+  }
+
+  const handleCycleSpeed = () => {
+    const nextSpeed = speechRate === 1.0 ? 1.25 : speechRate === 1.25 ? 1.5 : 1.0
+    setSpeechRate(nextSpeed)
+    speechRateRef.current = nextSpeed
+    if (hasMp3Audio && audioRef.current) {
+      audioRef.current.playbackRate = nextSpeed
+    } else if (speechStatus === 'playing') {
+      speakChunk(currentChunkIndexRef.current)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 py-20 flex items-center justify-center">
@@ -195,7 +489,9 @@ export default function PostDetailPage() {
   const mainCategory = post.categories?.[0] || { name: 'Comunidad', slug: 'cultura-comunidad' }
   const relatedPosts = getRelatedPosts(post, 4)
   const mostReadSidebar = allPosts.slice(0, 5)
-  const currentUrl = window.location.href
+  const currentUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}${getPostUrl(post)}`
+    : getPostUrl(post)
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl)
@@ -271,15 +567,18 @@ export default function PostDetailPage() {
           <div className="lg:col-span-8 bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-8 lg:p-10 space-y-6">
             
             {/* Category badge, Date & Reading Meta */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-2">
-                <Link
-                  to={`/categoria/${mainCategory.slug}`}
-                  className="bg-[#05a353] hover:bg-[#048a46] text-white text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full transition-colors shadow-2xs"
-                >
-                  {mainCategory.name}
-                </Link>
-                <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
+            <div className="flex items-center justify-between flex-wrap gap-4 pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(post.categories && post.categories.length > 0 ? post.categories : [mainCategory]).map((cat) => (
+                  <Link
+                    key={cat.slug || cat.name}
+                    to={`/categoria/${cat.slug}`}
+                    className="bg-[#05a353] hover:bg-[#048a46] text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full transition-colors shadow-2xs"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+                <span className="text-xs text-slate-400 flex items-center gap-1 font-medium ml-1">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
                   {formatDate(post.date)}
                 </span>
@@ -379,34 +678,160 @@ export default function PostDetailPage() {
               </div>
             </div>
 
-            {/* Audio Widget ("Escuchar noticia") */}
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => setIsAudioPlaying(!isAudioPlaying)}
-                  className="w-8 h-8 rounded-full bg-[#05a353] hover:bg-[#048a46] text-white flex items-center justify-center transition-all shadow-2xs shrink-0"
-                  aria-label="Reproducir audio"
-                >
-                  {isAudioPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                </button>
-                <div>
-                  <span className="font-bold text-slate-900 block">
-                    {isAudioPlaying ? 'Reproduciendo resumen hablado...' : 'Escuchar esta noticia'}
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    Audio accesible de Último Bastión • Duración: ~{readMinutes} min
-                  </span>
-                </div>
-              </div>
+            {/* REAL ACCESSIBLE AUDIO PLAYER WIDGET (SÍNTESIS DE VOZ Y LOCUCIÓN HUMANA) */}
+            {(hasMp3Audio || isSpeechSupported) && (
+              <div className="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-emerald-50/50 border border-emerald-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs transition-all">
+                {/* Hidden HTML5 Audio Element for Real Neural MP3 */}
+                {hasMp3Audio && (
+                  <audio
+                    ref={audioRef}
+                    src={`/audio/posts/${slug}.mp3`}
+                    preload="metadata"
+                    onLoadedMetadata={(e) => {
+                      const dur = e.currentTarget.duration
+                      if (!isNaN(dur) && dur > 0) {
+                        setMp3Duration(dur)
+                      } else {
+                        setHasMp3Audio(false)
+                      }
+                    }}
+                    onError={() => {
+                      setHasMp3Audio(false)
+                    }}
+                    onTimeUpdate={(e) => setMp3CurrentTime(e.currentTarget.currentTime)}
+                    onEnded={() => {
+                      setMp3Playing(false)
+                      setMp3CurrentTime(0)
+                    }}
+                    onPlay={() => setMp3Playing(true)}
+                    onPause={() => setMp3Playing(false)}
+                    className="hidden"
+                  />
+                )}
 
-              {/* Sound equalizer animation */}
-              <div className="flex items-end gap-0.5 h-4 text-emerald-700 shrink-0">
-                <span className={`w-1 bg-[#05a353] rounded-full transition-all duration-200 ${isAudioPlaying ? 'h-4 animate-pulse' : 'h-1.5'}`} />
-                <span className={`w-1 bg-[#05a353] rounded-full transition-all duration-200 ${isAudioPlaying ? 'h-2 animate-pulse delay-75' : 'h-3'}`} />
-                <span className={`w-1 bg-[#05a353] rounded-full transition-all duration-200 ${isAudioPlaying ? 'h-3.5 animate-pulse delay-150' : 'h-2'}`} />
-                <span className={`w-1 bg-[#05a353] rounded-full transition-all duration-200 ${isAudioPlaying ? 'h-2.5 animate-pulse delay-100' : 'h-1'}`} />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  
+                  {/* Left: Play button & Information */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleToggleSpeech}
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
+                        (hasMp3Audio ? mp3Playing : speechStatus === 'playing')
+                          ? 'bg-emerald-600 text-white shadow-emerald-200 ring-4 ring-emerald-100'
+                          : (!hasMp3Audio && speechStatus === 'paused')
+                          ? 'bg-amber-500 text-white shadow-amber-200 ring-4 ring-amber-100'
+                          : 'bg-emerald-700 hover:bg-emerald-800 text-white hover:scale-105'
+                      }`}
+                      aria-label="Reproducir o pausar audio de la noticia"
+                      title={
+                        (hasMp3Audio ? mp3Playing : speechStatus === 'playing')
+                          ? 'Pausar audio'
+                          : 'Escuchar toda la noticia'
+                      }
+                    >
+                      {(hasMp3Audio ? mp3Playing : speechStatus === 'playing') ? (
+                        <Pause className="w-5 h-5" />
+                      ) : (
+                        <Play className="w-5 h-5 ml-0.5" />
+                      )}
+                    </button>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                          {hasMp3Audio ? (
+                            mp3Playing ? 'Reproduciendo audio...' : 'Escuchar esta noticia'
+                          ) : (
+                            speechStatus === 'playing'
+                              ? 'Leyendo noticia en voz alta...'
+                              : speechStatus === 'paused'
+                              ? 'Lectura en pausa'
+                              : 'Escuchar esta noticia completa'
+                          )}
+                        </span>
+                        
+                        {/* Audio Badge */}
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                          <Volume2 className="w-3 h-3" />
+                          <span>{hasMp3Audio ? 'Audio disponible' : 'Lectura en voz alta'}</span>
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        {hasMp3Audio ? (
+                          <span>
+                            {formatAudioTime(mp3CurrentTime)} / {formatAudioTime(mp3Duration)} • El Último Bastión
+                          </span>
+                        ) : speechStatus === 'playing' ? (
+                          <span>
+                            Párrafo {currentChunkIndex + 1} de {totalChunks} • Lectura continua
+                          </span>
+                        ) : speechStatus === 'paused' ? (
+                          <span>Pulsa reproducir para reanudar donde quedaste</span>
+                        ) : (
+                          <span>
+                            Lectura asistida • Duración aprox: ~{readMinutes} min
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: Soundwave equalizer animation & Controls */}
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                    
+                    {/* Animated equalizer waves while playing */}
+                    {((hasMp3Audio && mp3Playing) || (!hasMp3Audio && speechStatus === 'playing')) && (
+                      <div className="flex items-end gap-0.5 h-4 text-emerald-600 px-1">
+                        <span className="w-1 bg-emerald-600 rounded-full h-4 animate-pulse" />
+                        <span className="w-1 bg-emerald-600 rounded-full h-2 animate-pulse delay-75" />
+                        <span className="w-1 bg-emerald-600 rounded-full h-3.5 animate-pulse delay-150" />
+                        <span className="w-1 bg-emerald-600 rounded-full h-2.5 animate-pulse delay-100" />
+                      </div>
+                    )}
+
+                    {/* Speed toggle button */}
+                    <button
+                      onClick={handleCycleSpeed}
+                      className="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs transition-colors cursor-pointer"
+                      title="Cambiar velocidad de lectura"
+                    >
+                      {speechRate}x
+                    </button>
+
+                    {/* Stop button */}
+                    {((hasMp3Audio && (mp3Playing || mp3CurrentTime > 0)) || (!hasMp3Audio && speechStatus !== 'idle')) && (
+                      <button
+                        onClick={handleStopSpeech}
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Detener lectura y volver al inicio"
+                      >
+                        <Square className="w-3 h-3 fill-current" />
+                        <span className="text-[11px]">Detener</span>
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+
+                {/* Progress bar */}
+                {hasMp3Audio && mp3Duration > 0 ? (
+                  <div className="w-full bg-slate-200/80 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div
+                      className="bg-emerald-600 h-full transition-all duration-150 rounded-full"
+                      style={{ width: `${Math.min(100, Math.round((mp3CurrentTime / mp3Duration) * 100))}%` }}
+                    />
+                  </div>
+                ) : speechStatus !== 'idle' && totalChunks > 0 ? (
+                  <div className="w-full bg-slate-200/80 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div
+                      className="bg-emerald-600 h-full transition-all duration-300 rounded-full"
+                      style={{ width: `${Math.round(((currentChunkIndex + 1) / totalChunks) * 100)}%` }}
+                    />
+                  </div>
+                ) : null}
               </div>
-            </div>
+            )}
 
             {/* Featured Lead Image (WebP) */}
             <div className="rounded-2xl overflow-hidden shadow-sm bg-slate-100 border border-slate-200">
@@ -430,32 +855,58 @@ export default function PostDetailPage() {
                 <BookOpen className="w-3.5 h-3.5 text-slate-400" /> Lectura cómoda
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] mr-1">Tamaño:</span>
+                <span className="text-[11px] mr-1 hidden sm:inline">Tamaño:</span>
                 <button
-                  onClick={() => setFontSize('text-sm sm:text-base')}
-                  className={`px-2.5 py-0.5 rounded-lg border font-bold ${fontSize === 'text-sm sm:text-base' ? 'bg-[#002845] text-white border-[#002845]' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                  onClick={() => setFontSize('font-size-sm')}
+                  className={`px-2.5 py-1 rounded-lg border font-bold text-xs cursor-pointer transition-all ${
+                    fontSize === 'font-size-sm'
+                      ? 'bg-[#002845] text-white border-[#002845] shadow-2xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
+                  title="Letra pequeña (15px)"
                 >
                   A-
                 </button>
                 <button
-                  onClick={() => setFontSize('text-base sm:text-lg')}
-                  className={`px-2.5 py-0.5 rounded-lg border font-bold ${fontSize === 'text-base sm:text-lg' ? 'bg-[#002845] text-white border-[#002845]' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                  onClick={() => setFontSize('font-size-base')}
+                  className={`px-2.5 py-1 rounded-lg border font-bold text-xs cursor-pointer transition-all ${
+                    fontSize === 'font-size-base'
+                      ? 'bg-[#002845] text-white border-[#002845] shadow-2xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
+                  title="Letra normal (17px)"
                 >
                   A
                 </button>
                 <button
-                  onClick={() => setFontSize('text-lg sm:text-xl')}
-                  className={`px-2.5 py-0.5 rounded-lg border font-bold ${fontSize === 'text-lg sm:text-xl' ? 'bg-[#002845] text-white border-[#002845]' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                  onClick={() => setFontSize('font-size-lg')}
+                  className={`px-2.5 py-1 rounded-lg border font-bold text-xs cursor-pointer transition-all ${
+                    fontSize === 'font-size-lg'
+                      ? 'bg-[#002845] text-white border-[#002845] shadow-2xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
+                  title="Letra grande (20px)"
                 >
                   A+
+                </button>
+                <button
+                  onClick={() => setFontSize('font-size-xl')}
+                  className={`px-2.5 py-1 rounded-lg border font-bold text-xs cursor-pointer transition-all ${
+                    fontSize === 'font-size-xl'
+                      ? 'bg-[#002845] text-white border-[#002845] shadow-2xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
+                  title="Letra muy grande (23px)"
+                >
+                  A++
                 </button>
               </div>
             </div>
 
-            {/* Article Formatted Body with Drop Cap on first paragraph */}
+            {/* Article Formatted Body with Dynamic Font Scaling */}
             <div 
               ref={articleContentRef}
-              className={`article-content max-w-none text-slate-800 leading-relaxed font-sans ${fontSize}`}
+              className={`article-content max-w-none text-slate-800 font-sans transition-all duration-200 ${fontSize}`}
               dangerouslySetInnerHTML={{ 
                 __html: cleanTextHtml || `<p>${post.excerpt}</p>` 
               }}
@@ -569,7 +1020,7 @@ export default function PostDetailPage() {
             <div className="pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {prevPost ? (
                 <Link
-                  to={`/noticia/${prevPost.slug}`}
+                  to={getPostUrl(prevPost)}
                   className="p-4 rounded-xl border border-slate-200 hover:border-[#05a353] bg-slate-50/70 hover:bg-emerald-50/30 transition-all group block text-left"
                 >
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-700 flex items-center gap-1 mb-1">
@@ -583,7 +1034,7 @@ export default function PostDetailPage() {
 
               {nextPost && (
                 <Link
-                  to={`/noticia/${nextPost.slug}`}
+                  to={getPostUrl(nextPost)}
                   className="p-4 rounded-xl border border-slate-200 hover:border-[#05a353] bg-slate-50/70 hover:bg-emerald-50/30 transition-all group block text-right sm:text-right"
                 >
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-700 flex items-center justify-end gap-1 mb-1">
@@ -643,7 +1094,7 @@ export default function PostDetailPage() {
                       {idx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <Link to={`/noticia/${item.slug}`}>
+                      <Link to={getPostUrl(item)}>
                         <h4 className="font-serif font-bold text-xs text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
                           {item.title}
                         </h4>
@@ -674,7 +1125,7 @@ export default function PostDetailPage() {
                 {relatedPosts.map((rel) => (
                   <article key={rel.id} className="flex items-start gap-3 group">
                     <Link
-                      to={`/noticia/${rel.slug}`}
+                      to={getPostUrl(rel)}
                       className="w-16 h-14 rounded-lg overflow-hidden shrink-0 bg-slate-100"
                     >
                       <img
@@ -685,7 +1136,7 @@ export default function PostDetailPage() {
                       />
                     </Link>
                     <div className="flex-1 min-w-0">
-                      <Link to={`/noticia/${rel.slug}`}>
+                      <Link to={getPostUrl(rel)}>
                         <h4 className="font-serif font-bold text-xs text-slate-800 group-hover:text-sky-700 transition-colors line-clamp-2 leading-snug">
                           {rel.title}
                         </h4>
