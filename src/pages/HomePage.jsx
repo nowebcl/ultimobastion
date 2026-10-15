@@ -48,12 +48,12 @@ const VIDEO_ITEMS = [
 ]
 
 const GALLERY_ITEMS = [
-  { id: 1, title: 'Maullín Costero y Tradición', image: '/images/site/gallery-1.webp' },
-  { id: 2, title: 'Borde Costero y Embarcaciones', image: '/images/site/gallery-2.webp' },
-  { id: 3, title: 'Patrimonio y Vida Rural', image: '/images/site/gallery-3.webp' },
-  { id: 4, title: 'Río Maullín y Humedales', image: '/images/site/gallery-4.webp' },
-  { id: 5, title: 'Paisajes y Naturaleza', image: '/images/site/gallery-5.webp' },
-  { id: 6, title: 'Atardeceres del Último Bastión', image: '/images/site/gallery-6.webp' }
+  { id: 1, image: '/images/site/gallery-1.webp' },
+  { id: 2, image: '/images/site/gallery-2.webp' },
+  { id: 3, image: '/images/site/gallery-3.webp' },
+  { id: 4, image: '/images/site/gallery-4.webp' },
+  { id: 5, image: '/images/site/gallery-5.webp' },
+  { id: 6, image: '/images/site/gallery-6.webp' }
 ]
 
 // Helper for getting primary journalistic category
@@ -774,14 +774,14 @@ export default function HomePage() {
         </section>
 
         {/* 7. SECTION 5: WIDE PANORAMIC BANNER */}
-        <section className="rounded-2xl overflow-hidden relative min-h-[170px] sm:min-h-[220px] flex items-center p-6 sm:p-10 shadow-md border border-slate-200/60 group bg-slate-900">
+        <section className="rounded-2xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[2.33/1] min-h-[250px] sm:min-h-[320px] md:min-h-[380px] lg:min-h-[440px] flex items-center p-6 sm:p-10 shadow-md border border-slate-200/60 group bg-slate-900">
           <img
-            src="/images/site/banner-panorama.webp?v=2"
+            src="/images/site/banner-panorama.webp?v=3"
             alt="Maullín: Un destino por descubrir"
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            className="absolute inset-0 w-full h-full object-cover object-bottom sm:object-[center_85%] group-hover:scale-[1.02] transition-transform duration-700"
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Atardecer%20dram%C3%A1tico%20sobre%20el%20muelle%20costero.png' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/35 to-transparent max-w-xl" />
           <div className="relative z-10 max-w-lg space-y-1.5">
             <h2 className="font-serif font-extrabold text-3xl sm:text-4xl text-white drop-shadow-md">
               Maullín
@@ -805,24 +805,17 @@ export default function HomePage() {
         <section>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 sm:gap-3">
             {GALLERY_ITEMS.map((g) => (
-              <Link
+              <div
                 key={g.id}
-                to="/mapas"
-                title={g.title}
                 className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 group shadow-xs hover:shadow-md relative border border-slate-200/60"
               >
                 <img
                   src={g.image}
-                  alt={g.title}
+                  alt="Banner Maullín"
                   loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
-                  <span className="text-[11px] text-white font-medium leading-tight line-clamp-1 drop-shadow-xs">
-                    {g.title}
-                  </span>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
