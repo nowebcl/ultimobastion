@@ -116,16 +116,16 @@ export default function HomePage() {
     return fallback
   }
 
-  // Row 1: 3 News Cards (Salud, Deportes, Cultura)
-  const row1Salud = findPost(p => p.categories?.some(c => c.slug === 'salud'), 5)
-  const row1Deportes = findPost(p => p.categories?.some(c => c.slug === 'deporte'), 6)
-  const row1Cultura = findPost(p => p.categories?.some(c => c.slug === 'cultura-comunidad'), 7)
+  // Row 1: 3 News Cards (Cultura, Proyectos, Fomento - exact match with original site)
+  const row1Cultura = findPost(p => p.categories?.some(c => c.slug === 'cultura-comunidad'), 5)
+  const row1Proyectos = findPost(p => p.categories?.some(c => c.slug === 'proyectos'), 6)
+  const row1Fomento = findPost(p => p.categories?.some(c => c.slug === 'fomento'), 7)
 
-  // Row 2: 4 Category Cards (Comuna, Medio Ambiente, Comunidad, Turismo)
-  const row2Comuna = findPost(p => p.categories?.some(c => c.slug === 'seguridad' || c.slug === 'proyectos'), 8)
-  const row2MedioAmbiente = findPost(p => p.title?.toLowerCase().includes('humedal') || p.title?.toLowerCase().includes('costero') || p.title?.toLowerCase().includes('limpieza') || p.title?.toLowerCase().includes('rio'), 9)
+  // Row 2: 4 Category Cards (Salud, Turismo, Comunidad, Medio Ambiente)
+  const row2Salud = findPost(p => p.categories?.some(c => c.slug === 'salud'), 8)
+  const row2Turismo = findPost(p => p.categories?.some(c => c.slug === 'turismo'), 9)
   const row2Comunidad = findPost(p => p.title?.toLowerCase().includes('adulto') || p.title?.toLowerCase().includes('comunitari') || p.categories?.some(c => c.slug === 'agrupaciones-comunitarias'), 10)
-  const row2Turismo = findPost(p => p.categories?.some(c => c.slug === 'turismo') || p.categories?.some(c => c.slug === 'fomento'), 11)
+  const row2MedioAmbiente = findPost(p => p.title?.toLowerCase().includes('humedal') || p.title?.toLowerCase().includes('costero') || p.title?.toLowerCase().includes('limpieza') || p.title?.toLowerCase().includes('rio'), 11)
 
   // Row 3: Más Noticias (5 items), Destacado (1 item), Visita
   const row3MasNoticias = []
@@ -135,9 +135,9 @@ export default function HomePage() {
   }
   const row3Destacado = findPost(p => p.title?.toLowerCase().includes('costa') || p.title?.toLowerCase().includes('desarrollo') || p.title?.toLowerCase().includes('proyecto') || p.title?.toLowerCase().includes('iniciativa'), 18)
 
-  // Row 4: Deportes, Cultura, Videos
+  // Row 4: Deporte, Educación, Videos
   const row4Deportes = findPost(p => p.categories?.some(c => c.slug === 'deporte'), 19)
-  const row4Cultura = findPost(p => p.categories?.some(c => c.slug === 'cultura-comunidad'), 20)
+  const row4Educacion = findPost(p => p.categories?.some(c => c.slug === 'educacion'), 20)
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
@@ -280,61 +280,44 @@ export default function HomePage() {
 
         </section>
 
-        {/* 3. SECTION 1: TRI-COLUMN NEWS CARDS (SALUD, DEPORTES, CULTURA) */}
+        {/* SITIOS RECOMENDADOS (Fiel al sitio original) */}
+        <section className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-[#05a353] animate-pulse" />
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider font-serif">
+                Sitios recomendados
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <a href="https://www.goreloslagos.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Gobierno Regional
+              </a>
+              <a href="https://www.munimaullin.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Municipalidad de Maullín
+              </a>
+              <a href="https://comunasmagicas.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Comunas Mágicas
+              </a>
+              <a href="https://patagoniacosta.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Patagonia Costa
+              </a>
+              <a href="https://radiopangalfm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Radio Pangal FM
+              </a>
+              <a href="https://radiosanfranciscofm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Radio San Francisco FM
+              </a>
+              <a href="https://alejandrogallardo.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+                Alejandro Gallardo.cl
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. SECTION 1: TRI-COLUMN NEWS CARDS (CULTURA, PROYECTOS, FOMENTO) */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: SALUD */}
-          <article className="group cursor-pointer">
-            <Link to={getPostUrl(row1Salud)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
-              <img
-                src={row1Salud?.image}
-                alt={row1Salud?.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
-              />
-            </Link>
-            <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
-              SALUD
-            </span>
-            <Link to={getPostUrl(row1Salud)}>
-              <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
-                {row1Salud?.title}
-              </h3>
-            </Link>
-            <p className="text-xs text-slate-600 leading-relaxed mt-1.5 line-clamp-3">
-              {row1Salud?.excerpt}
-            </p>
-            <div className="text-[11px] text-slate-400 mt-2 font-medium">
-              {formatTimeAgo(row1Salud?.date)} • Maullín
-            </div>
-          </article>
-
-          {/* Card 2: DEPORTES */}
-          <article className="group cursor-pointer">
-            <Link to={getPostUrl(row1Deportes)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
-              <img
-                src={row1Deportes?.image}
-                alt={row1Deportes?.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
-              />
-            </Link>
-            <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
-              DEPORTES
-            </span>
-            <Link to={getPostUrl(row1Deportes)}>
-              <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
-                {row1Deportes?.title}
-              </h3>
-            </Link>
-            <p className="text-xs text-slate-600 leading-relaxed mt-1.5 line-clamp-3">
-              {row1Deportes?.excerpt}
-            </p>
-            <div className="text-[11px] text-slate-400 mt-2 font-medium">
-              {formatTimeAgo(row1Deportes?.date)} • Maullín
-            </div>
-          </article>
-
-          {/* Card 3: CULTURA */}
+          {/* Card 1: CULTURA */}
           <article className="group cursor-pointer">
             <Link to={getPostUrl(row1Cultura)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
               <img
@@ -344,9 +327,9 @@ export default function HomePage() {
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <span className="text-[11px] font-bold text-[#05a353] uppercase tracking-wider block mt-3 mb-1">
+            <Link to="/categoria/cultura-comunidad" className="text-[11px] font-bold text-[#05a353] hover:text-[#048a46] uppercase tracking-wider block mt-3 mb-1">
               CULTURA
-            </span>
+            </Link>
             <Link to={getPostUrl(row1Cultura)}>
               <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
                 {row1Cultura?.title}
@@ -359,34 +342,88 @@ export default function HomePage() {
               {formatTimeAgo(row1Cultura?.date)} • Maullín
             </div>
           </article>
-        </section>
 
-        {/* 4. SECTION 2: 4-COLUMN CATEGORY GRID */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Col 1: COMUNA */}
+          {/* Card 2: PROYECTOS */}
           <article className="group cursor-pointer">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
-              <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider font-serif">COMUNA</h3>
-            </div>
-            <Link to={getPostUrl(row2Comuna)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+            <Link to={getPostUrl(row1Proyectos)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
               <img
-                src={row2Comuna?.image}
-                alt={row2Comuna?.title}
+                src={row1Proyectos?.image}
+                alt={row1Proyectos?.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
               />
             </Link>
-            <Link to={getPostUrl(row2Comuna)}>
+            <Link to="/categoria/proyectos" className="text-[11px] font-bold text-[#05a353] hover:text-[#048a46] uppercase tracking-wider block mt-3 mb-1">
+              PROYECTOS
+            </Link>
+            <Link to={getPostUrl(row1Proyectos)}>
+              <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
+                {row1Proyectos?.title}
+              </h3>
+            </Link>
+            <p className="text-xs text-slate-600 leading-relaxed mt-1.5 line-clamp-3">
+              {row1Proyectos?.excerpt}
+            </p>
+            <div className="text-[11px] text-slate-400 mt-2 font-medium">
+              {formatTimeAgo(row1Proyectos?.date)} • Maullín
+            </div>
+          </article>
+
+          {/* Card 3: FOMENTO */}
+          <article className="group cursor-pointer">
+            <Link to={getPostUrl(row1Fomento)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 shadow-2xs">
+              <img
+                src={row1Fomento?.image}
+                alt={row1Fomento?.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
+              />
+            </Link>
+            <Link to="/categoria/fomento" className="text-[11px] font-bold text-[#05a353] hover:text-[#048a46] uppercase tracking-wider block mt-3 mb-1">
+              FOMENTO
+            </Link>
+            <Link to={getPostUrl(row1Fomento)}>
+              <h3 className="font-serif font-bold text-base sm:text-[17px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2">
+                {row1Fomento?.title}
+              </h3>
+            </Link>
+            <p className="text-xs text-slate-600 leading-relaxed mt-1.5 line-clamp-3">
+              {row1Fomento?.excerpt}
+            </p>
+            <div className="text-[11px] text-slate-400 mt-2 font-medium">
+              {formatTimeAgo(row1Fomento?.date)} • Maullín
+            </div>
+          </article>
+        </section>
+
+        {/* 4. SECTION 2: 4-COLUMN CATEGORY GRID (SALUD, TURISMO, COMUNIDAD, MEDIO AMBIENTE) */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Col 1: SALUD */}
+          <article className="group cursor-pointer">
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
+              <Link to="/categoria/salud" className="text-[11px] font-bold text-slate-900 hover:text-sky-700 uppercase tracking-wider font-serif">
+                SALUD
+              </Link>
+            </div>
+            <Link to={getPostUrl(row2Salud)} className="aspect-[16/10] rounded-lg overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+              <img
+                src={row2Salud?.image}
+                alt={row2Salud?.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
+              />
+            </Link>
+            <Link to={getPostUrl(row2Salud)}>
               <h4 className="font-serif font-bold text-[13px] text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
-                {row2Comuna?.title}
+                {row2Salud?.title}
               </h4>
             </Link>
             <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2 mb-1.5">
-              {row2Comuna?.excerpt}
+              {row2Salud?.excerpt}
             </p>
             <span className="text-[10px] text-slate-400 font-medium block">
-              {formatTimeAgo(row2Comuna?.date)} • Maullín
+              {formatTimeAgo(row2Salud?.date)} • Maullín
             </span>
           </article>
 
@@ -581,16 +618,16 @@ export default function HomePage() {
 
         </section>
 
-        {/* 6. SECTION 4: DEPORTES, CULTURA, VIDEOS */}
+        {/* 6. SECTION 4: DEPORTES, EDUCACIÓN, VIDEOS */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           
           {/* Col 1: DEPORTES */}
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 border-b border-slate-200 pb-2">
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-serif">
+              <Link to="/categoria/deporte" className="text-xs font-bold text-slate-900 hover:text-sky-700 uppercase tracking-wider font-serif">
                 DEPORTES
-              </h3>
+              </Link>
             </div>
             <article className="group cursor-pointer">
               <Link to={getPostUrl(row4Deportes)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
@@ -615,33 +652,33 @@ export default function HomePage() {
             </article>
           </div>
 
-          {/* Col 2: CULTURA */}
+          {/* Col 2: EDUCACIÓN */}
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 border-b border-slate-200 pb-2">
               <span className="w-1 h-3.5 bg-[#05a353] rounded-full inline-block" />
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-serif">
-                CULTURA
-              </h3>
+              <Link to="/categoria/educacion" className="text-xs font-bold text-slate-900 hover:text-sky-700 uppercase tracking-wider font-serif">
+                EDUCACIÓN
+              </Link>
             </div>
             <article className="group cursor-pointer">
-              <Link to={getPostUrl(row4Cultura)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
+              <Link to={getPostUrl(row4Educacion)} className="aspect-[16/10] rounded-xl overflow-hidden block bg-slate-100 mb-2.5 shadow-2xs">
                 <img
-                  src={row4Cultura?.image}
-                  alt={row4Cultura?.title}
+                  src={row4Educacion?.image}
+                  alt={row4Educacion?.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
                 />
               </Link>
-              <Link to={getPostUrl(row4Cultura)}>
+              <Link to={getPostUrl(row4Educacion)}>
                 <h4 className="font-serif font-bold text-sm text-slate-900 leading-snug group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">
-                  {row4Cultura?.title}
+                  {row4Educacion?.title}
                 </h4>
               </Link>
               <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-2">
-                {row4Cultura?.excerpt}
+                {row4Educacion?.excerpt}
               </p>
               <span className="text-[11px] text-slate-400 font-medium block">
-                {formatTimeAgo(row4Cultura?.date)} • Maullín
+                {formatTimeAgo(row4Educacion?.date)} • Maullín
               </span>
             </article>
           </div>

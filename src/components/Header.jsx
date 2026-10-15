@@ -5,7 +5,7 @@ import {
   ExternalLink, CloudSun, Radio, Sparkles,
   Play, Pause, Volume2, VolumeX
 } from 'lucide-react'
-import { InstagramIcon, YoutubeIcon } from './SocialIcons'
+import { FacebookIcon, InstagramIcon, TiktokIcon, YoutubeIcon } from './SocialIcons'
 import { getCategories, searchPosts, getPostUrl } from '../utils/postsService'
 import { useRadio } from '../context/RadioContext'
 
@@ -409,10 +409,19 @@ export default function Header() {
             {/* Separator | */}
             <span className="text-slate-500 font-light select-none mx-0.5">|</span>
 
-            {/* Social Icons (Instagram & YouTube) */}
+            {/* Social Icons (Facebook, Instagram & TikTok) */}
             <div className="flex items-center gap-3">
               <a 
-                href="https://instagram.com" 
+                href="https://www.facebook.com/ultimobastionm" 
+                target="_blank" 
+                rel="noreferrer" 
+                aria-label="Facebook"
+                className="text-white hover:text-blue-400 transition-colors"
+              >
+                <FacebookIcon className="w-4 h-4" />
+              </a>
+              <a 
+                href="https://www.instagram.com/maullinultimobastion.cl?igsh=MzJjdzlpdTI0bm5s" 
                 target="_blank" 
                 rel="noreferrer" 
                 aria-label="Instagram"
@@ -421,13 +430,13 @@ export default function Header() {
                 <InstagramIcon className="w-4 h-4" />
               </a>
               <a 
-                href="https://youtube.com" 
+                href="https://www.tiktok.com/@maullinultimobastion?lang=es-419" 
                 target="_blank" 
                 rel="noreferrer" 
-                aria-label="YouTube"
-                className="text-white hover:text-red-500 transition-colors"
+                aria-label="TikTok"
+                className="text-white hover:text-slate-300 transition-colors"
               >
-                <YoutubeIcon className="w-4 h-4" />
+                <TiktokIcon className="w-4 h-4" />
               </a>
             </div>
 
@@ -620,11 +629,14 @@ export default function Header() {
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <span>Síguenos:</span>
             <div className="flex items-center gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-pink-400">
+              <a href="https://www.facebook.com/ultimobastionm" target="_blank" rel="noreferrer" className="text-blue-400">
+                <FacebookIcon className="w-4 h-4" />
+              </a>
+              <a href="https://www.instagram.com/maullinultimobastion.cl?igsh=MzJjdzlpdTI0bm5s" target="_blank" rel="noreferrer" className="text-pink-400">
                 <InstagramIcon className="w-4 h-4" />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-red-500">
-                <YoutubeIcon className="w-4 h-4" />
+              <a href="https://www.tiktok.com/@maullinultimobastion?lang=es-419" target="_blank" rel="noreferrer" className="text-slate-300">
+                <TiktokIcon className="w-4 h-4" />
               </a>
             </div>
           </div>

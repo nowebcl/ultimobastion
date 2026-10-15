@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-  FacebookIcon, TwitterIcon, InstagramIcon, YoutubeIcon 
+  FacebookIcon, TwitterIcon, InstagramIcon, YoutubeIcon, TiktokIcon 
 } from './SocialIcons'
 import { 
   ArrowUp, CheckCircle2, ArrowRight, Landmark, Building2, 
@@ -85,17 +85,21 @@ export default function Footer() {
                 Sitio Independiente
               </div>
               <h3 className="font-serif font-extrabold text-slate-900 text-base sm:text-lg tracking-tight">
-                MAULLÍN: EL ÚLTIMO BASTIÓN
+                MAULLÍN ÚLTIMO BASTIÓN
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
-                La voz de Maullín y su comunidad. Contamos lo que pasa en el territorio con seriedad, cercanía y compromiso: cultura y vida local.
+                Revista digital territorial • Memoria visual e identidad local, desde hoy para el futuro.
               </p>
+              <div className="text-[11px] text-slate-500 space-y-0.5 pt-1">
+                <div>📍 Calle Almeyda 151, Maullín</div>
+                <div>📞 +56 9 9510 4318 • ✉️ victorg10@gmail.com</div>
+              </div>
             </div>
 
             {/* Social Icons Row */}
             <div className="flex items-center gap-2 pt-1">
               <a 
-                href="https://facebook.com" 
+                href="https://www.facebook.com/ultimobastionm" 
                 target="_blank" 
                 rel="noreferrer"
                 aria-label="Facebook"
@@ -104,7 +108,7 @@ export default function Footer() {
                 <FacebookIcon className="w-4 h-4" />
               </a>
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/maullinultimobastion.cl?igsh=MzJjdzlpdTI0bm5s" 
                 target="_blank" 
                 rel="noreferrer"
                 aria-label="Instagram"
@@ -113,31 +117,13 @@ export default function Footer() {
                 <InstagramIcon className="w-4 h-4" />
               </a>
               <a 
-                href="https://youtube.com" 
-                target="_blank" 
-                rel="noreferrer"
-                aria-label="YouTube"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#FF0000] text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105"
-              >
-                <YoutubeIcon className="w-4 h-4" />
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noreferrer"
-                aria-label="X Twitter"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-black text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105"
-              >
-                <TwitterIcon className="w-4 h-4" />
-              </a>
-              <a 
-                href="https://www.tiktok.com" 
+                href="https://www.tiktok.com/@maullinultimobastion?lang=es-419" 
                 target="_blank" 
                 rel="noreferrer"
                 aria-label="TikTok"
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-900 text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105 font-bold text-xs"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-900 text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105"
               >
-                🎵
+                <TiktokIcon className="w-4 h-4" />
               </a>
             </div>
           </div>

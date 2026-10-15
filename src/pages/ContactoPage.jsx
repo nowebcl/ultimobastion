@@ -272,7 +272,7 @@ export default function ContactoPage() {
                 </span>
                 <div className="flex items-center gap-2">
                   <a
-                    href="https://facebook.com"
+                    href="https://www.facebook.com/ultimobastionm"
                     target="_blank"
                     rel="noreferrer"
                     className="p-2 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 transition-colors"
@@ -281,13 +281,22 @@ export default function ContactoPage() {
                     <FacebookIcon className="w-4 h-4" />
                   </a>
                   <a
-                    href="https://instagram.com"
+                    href="https://www.instagram.com/maullinultimobastion.cl?igsh=MzJjdzlpdTI0bm5s"
                     target="_blank"
                     rel="noreferrer"
                     className="p-2 rounded-lg bg-slate-100 hover:bg-pink-600 hover:text-white text-slate-700 transition-colors"
                     aria-label="Instagram"
                   >
                     <InstagramIcon className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@maullinultimobastion?lang=es-419"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 transition-colors font-bold text-xs"
+                    aria-label="TikTok"
+                  >
+                    🎵
                   </a>
                   <a
                     href="https://wa.me/56995104318"
@@ -300,6 +309,20 @@ export default function ContactoPage() {
                   </a>
                 </div>
               </div>
+            </div>
+
+            {/* Google Maps Location Embed */}
+            <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+              <div className="p-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-sky-600" />
+                <span>Ubicación: Calle Almeyda 151, Maullín</span>
+              </div>
+              <iframe
+                src="https://maps.google.com/maps?q=almeyda%20151%2C%20Maullin&t=m&z=14&output=embed&iwloc=near"
+                title="Calle Almeyda 151, Maullín"
+                loading="lazy"
+                className="w-full h-64 sm:h-72 border-0"
+              />
             </div>
 
           </div>
