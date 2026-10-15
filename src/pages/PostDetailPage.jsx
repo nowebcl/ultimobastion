@@ -232,10 +232,14 @@ export default function PostDetailPage() {
 
     const rawContent = post.content
 
-    // Helper to optimize image URLs on the fly (Jetpack photon WebP conversion & 75% quality compression)
+    // Helper to optimize legacy image URLs (PocketBase images are already ultra-optimized WebP)
     const optimizeImageUrl = (url, targetWidth = 800) => {
       if (!url) return ''
-      if (url.includes('wp-content') || url.includes('maullinultimobastion.cl')) {
+      // Already an ultra-optimized WebP directly from PocketBase database
+      if (url.includes('bd.maullinultimobastion.cl')) {
+        return url
+      }
+      if (url.includes('wp-content')) {
         const clean = url.replace(/https?:\/\/i\d\.wp\.com\//, 'https://').split('?')[0]
         const domainPath = clean.replace(/^https?:\/\//, '')
         return `https://i0.wp.com/${domainPath}?w=${targetWidth}&strip=all&quality=75`
