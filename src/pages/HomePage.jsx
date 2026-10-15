@@ -11,42 +11,49 @@ import {
   getPostUrl
 } from '../utils/postsService'
 
-// Static data for multimedia and gallery from Maullín
+// Static data for multimedia and gallery from Maullín (Real YouTube videos from Maullín)
 const VIDEO_ITEMS = [
   {
-    id: 'vid-1',
-    title: 'Vida de Pescadores en Maullín',
-    duration: '3:24',
-    timeAgo: 'Hace 2 días',
-    image: '/images/site/gallery-5.webp',
+    id: 'rwJjTbPWQ74',
+    title: 'Terremoto y Maremoto 1960 - Historia Cultural de Maullín (Cap. 5)',
+    duration: '14:20',
+    timeAgo: 'Maullín Histórico',
+    author: 'Sintonízate Maullín',
+    image: '/images/videos/rwJjTbPWQ74.webp',
   },
   {
-    id: 'vid-2',
-    title: 'Recorriendo el Humedal de Quenuir',
-    timeAgo: 'Hace 3 días',
-    image: '/images/site/gallery-6.webp',
+    id: 'SR1t4FMkFIU',
+    title: 'Recomiendo Chile | Maullín: Tradición y Sabor Costero',
+    duration: '52:10',
+    timeAgo: 'Canal 13',
+    author: 'Recomiendo Chile',
+    image: '/images/videos/SR1t4FMkFIU.webp',
   },
   {
-    id: 'vid-3',
-    title: 'Tradiciones de Carelmapu',
-    timeAgo: 'Hace 4 días',
-    image: '/images/site/gallery-4.webp',
+    id: 'PDgFD4lDaX4',
+    title: 'Lugares Que Hablan: Bellezas y Gente de Maullín',
+    duration: '45:30',
+    timeAgo: 'Canal 13',
+    author: 'Lugares Que Hablan',
+    image: '/images/videos/PDgFD4lDaX4.webp',
   },
   {
-    id: 'vid-4',
-    title: 'Gastronomía Local: Curantos de Maullín',
-    timeAgo: 'Hace 5 días',
-    image: '/images/site/gallery-2.webp',
+    id: 'AaGCswu-yEw',
+    title: 'Historia Cultural de Maullín - Capítulo 4',
+    duration: '18:15',
+    timeAgo: 'Patrimonio Cultural',
+    author: 'Sintonízate Maullín',
+    image: '/images/videos/AaGCswu-yEw.webp',
   }
 ]
 
 const GALLERY_ITEMS = [
-  { id: 1, title: 'Ciclismo y Deporte Costero', image: '/images/site/gallery-1.webp' },
-  { id: 2, title: 'Costanera y Muelle de Maullín', image: '/images/site/gallery-2.webp' },
-  { id: 3, title: 'Campos y Vida Rural', image: '/images/site/gallery-3.webp' },
-  { id: 4, title: 'Iglesia Patrimonial de Carelmapu', image: '/images/site/gallery-4.webp' },
-  { id: 5, title: 'Bahía y Embarcaciones Fluviales', image: '/images/site/gallery-5.webp' },
-  { id: 6, title: 'Atardecer en el Río Maullín', image: '/images/site/gallery-6.webp' }
+  { id: 1, title: 'Maullín Costero y Tradición', image: '/images/site/gallery-1.webp' },
+  { id: 2, title: 'Borde Costero y Embarcaciones', image: '/images/site/gallery-2.webp' },
+  { id: 3, title: 'Patrimonio y Vida Rural', image: '/images/site/gallery-3.webp' },
+  { id: 4, title: 'Río Maullín y Humedales', image: '/images/site/gallery-4.webp' },
+  { id: 5, title: 'Paisajes y Naturaleza', image: '/images/site/gallery-5.webp' },
+  { id: 6, title: 'Atardeceres del Último Bastión', image: '/images/site/gallery-6.webp' }
 ]
 
 // Helper for getting primary journalistic category
@@ -296,25 +303,25 @@ export default function HomePage() {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <a href="https://www.goreloslagos.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://www.goreloslagos.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Gobierno Regional
               </a>
-              <a href="https://www.munimaullin.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://www.munimaullin.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Municipalidad de Maullín
               </a>
-              <a href="https://comunasmagicas.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://comunasmagicas.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Comunas Mágicas
               </a>
-              <a href="https://patagoniacosta.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://patagoniacosta.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Patagonia Costa
               </a>
-              <a href="https://radiopangalfm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://radiopangalfm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Radio Pangal FM
               </a>
-              <a href="https://radiosanfranciscofm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://radiosanfranciscofm.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Radio San Francisco FM
               </a>
-              <a href="https://alejandrogallardo.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/70 transition-colors">
+              <a href="https://alejandrogallardo.cl/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#05a353] hover:bg-[#048844] text-white shadow-xs transition-all tracking-wide">
                 Alejandro Gallardo.cl
               </a>
             </div>
@@ -707,7 +714,7 @@ export default function HomePage() {
                 src={VIDEO_ITEMS[0].image}
                 alt={VIDEO_ITEMS[0].title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/maps/map-4.webp' }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = `https://img.youtube.com/vi/${VIDEO_ITEMS[0].id}/hqdefault.jpg` }}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-white/95 text-slate-900 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -744,7 +751,7 @@ export default function HomePage() {
                       src={v.image}
                       alt={v.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/site/hero-landscape-clean.webp' }}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                       <Play className="w-3 h-3 fill-white text-white opacity-80" />
@@ -769,10 +776,10 @@ export default function HomePage() {
         {/* 7. SECTION 5: WIDE PANORAMIC BANNER */}
         <section className="rounded-2xl overflow-hidden relative min-h-[170px] sm:min-h-[220px] flex items-center p-6 sm:p-10 shadow-md border border-slate-200/60 group bg-slate-900">
           <img
-            src="/images/site/banner-panorama.webp"
+            src="/images/site/banner-panorama.webp?v=2"
             alt="Maullín: Un destino por descubrir"
             className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/site/hero-landscape-clean.webp' }}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Atardecer%20dram%C3%A1tico%20sobre%20el%20muelle%20costero.png' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/40 to-transparent" />
           <div className="relative z-10 max-w-lg space-y-1.5">
@@ -843,18 +850,14 @@ export default function HomePage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="aspect-video bg-black relative flex items-center justify-center">
-              <div className="text-center p-6 space-y-3">
-                <div className="w-16 h-16 rounded-full bg-red-600/90 text-white flex items-center justify-center mx-auto shadow-lg animate-pulse">
-                  <Play className="w-7 h-7 fill-white ml-1" />
-                </div>
-                <p className="text-white font-serif font-bold text-base sm:text-lg">
-                  {activeVideo.title}
-                </p>
-                <p className="text-xs text-slate-400">
-                  Transmisión audiovisual territorial de Maullín Último Bastión
-                </p>
-              </div>
+            <div className="aspect-video bg-black relative">
+              <iframe
+                src={`https://www.youtube.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
+                title={activeVideo.title}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
             <div className="p-3 bg-slate-950 text-xs text-slate-400 flex items-center justify-between">
               <span>Maullín • Reportajes & Audiovisual Territorial</span>

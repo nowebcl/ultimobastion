@@ -291,9 +291,6 @@ export default function Header() {
                 <Link to="/mapas" className="block p-2 rounded-lg hover:bg-white/10 text-slate-200 hover:text-white normal-case text-xs transition-colors">
                   Mapas & Conectividad Fluvial
                 </Link>
-                <Link to="/contacto" className="block p-2 rounded-lg hover:bg-white/10 text-slate-200 hover:text-white normal-case text-xs transition-colors">
-                  Atención Ciudadana & Denuncias
-                </Link>
               </div>
             </div>
 
