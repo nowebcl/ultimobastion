@@ -232,6 +232,17 @@ export default function PostDetailPage() {
 
     const rawContent = post.content
 
+    // Helper to optimize image URLs on the fly (Jetpack photon WebP conversion & 75% quality compression)
+    const optimizeImageUrl = (url, targetWidth = 800) => {
+      if (!url) return ''
+      if (url.includes('wp-content') || url.includes('maullinultimobastion.cl')) {
+        const clean = url.replace(/https?:\/\/i\d\.wp\.com\//, 'https://').split('?')[0]
+        const domainPath = clean.replace(/^https?:\/\//, '')
+        return `https://i0.wp.com/${domainPath}?w=${targetWidth}&strip=all&quality=75`
+      }
+      return url
+    }
+
     // Extract all non-emoji image URLs from content
     const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi
     let match
@@ -239,19 +250,25 @@ export default function PostDetailPage() {
     const seen = new Set()
 
     while ((match = imgRegex.exec(rawContent)) !== null) {
-      const src = match[1]
-      if (src && !src.includes('emoji.php') && !seen.has(src)) {
-        seen.add(src)
-        images.push(src)
+      const rawSrc = match[1]
+      if (rawSrc && !rawSrc.includes('emoji.php')) {
+        const src = optimizeImageUrl(rawSrc, 800)
+        if (!seen.has(src)) {
+          seen.add(src)
+          images.push(src)
+        }
       }
     }
 
     // Include post.gallery images (e.g. additional uploaded images from PocketBase)
     if (post.gallery && Array.isArray(post.gallery)) {
-      post.gallery.forEach(src => {
-        if (src && !seen.has(src)) {
-          seen.add(src)
-          images.push(src)
+      post.gallery.forEach(rawSrc => {
+        if (rawSrc) {
+          const src = optimizeImageUrl(rawSrc, 800)
+          if (!seen.has(src)) {
+            seen.add(src)
+            images.push(src)
+          }
         }
       })
     }
@@ -834,15 +851,19 @@ export default function PostDetailPage() {
             )}
 
             {/* Featured Lead Image (WebP) */}
-            <div className="rounded-2xl overflow-hidden shadow-sm bg-slate-100 border border-slate-200">
+            <div className="rounded-2xl overflow-hidden shadow-sm bg-slate-100 border border-slate-200 aspect-[16/10] max-h-[520px]">
               <img
                 src={post.image}
                 alt={post.title}
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
                 onError={(e) => {
-                  e.currentTarget.onerror = null
+                  if (e.currentTarget.dataset.failed) return
+                  e.currentTarget.dataset.failed = "true"
                   e.currentTarget.src = '/images/default-news.webp'
                 }}
-                className="w-full h-auto max-h-[520px] object-cover mx-auto"
+                className="w-full h-full object-cover mx-auto"
               />
               <div className="py-2.5 px-4 bg-slate-50 text-slate-500 text-xs italic text-center border-t border-slate-200">
                 {post.title} — Archivo Fotográfico Oficial de Maullín
@@ -942,9 +963,11 @@ export default function PostDetailPage() {
                         src={imgSrc}
                         alt={`${post.title} - Foto ${idx + 1}`}
                         loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
-                          e.currentTarget.onerror = null
+                          if (e.currentTarget.dataset.failed) return
+                          e.currentTarget.dataset.failed = "true"
                           e.currentTarget.src = '/images/default-news.webp'
                         }}
                       />

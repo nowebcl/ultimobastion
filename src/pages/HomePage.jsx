@@ -156,8 +156,12 @@ export default function HomePage() {
               <img
                 src={featuredLead?.image || '/images/site/hero-mockup.webp'}
                 alt={featuredLead?.title || 'Noticia destacada'}
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
                 onError={(e) => {
-                  e.currentTarget.onerror = null
+                  if (e.currentTarget.dataset.failed) return
+                  e.currentTarget.dataset.failed = 'true'
                   e.currentTarget.src = '/images/site/hero-mockup.webp'
                 }}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -246,9 +250,11 @@ export default function HomePage() {
                       <img
                         src={item.image}
                         alt={item.title}
-                        loading="lazy"
+                        loading={index < 2 ? 'eager' : 'lazy'}
+                        decoding={index < 2 ? 'sync' : 'async'}
                         onError={(e) => {
-                          e.currentTarget.onerror = null
+                          if (e.currentTarget.dataset.failed) return
+                          e.currentTarget.dataset.failed = 'true'
                           e.currentTarget.src = '/images/default-news.webp'
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

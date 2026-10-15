@@ -7,7 +7,7 @@ import {
   X, Eye, Phone, MapPin, Clock, Menu, PenSquare,
   ShieldCheck, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Edit3, Compass, Check, ArrowLeft, Home,
-  ChevronDown, FolderTree, LayoutGrid, List, Tag, Filter
+  ChevronDown, FolderTree, LayoutGrid, List, Tag, Filter, Sparkles
 } from 'lucide-react'
 import { 
   pb, 
@@ -18,6 +18,7 @@ import {
   getPocketBaseFileUrl 
 } from '../utils/pocketbase'
 import { syncDbPosts, getActiveCategoriesWithPosts, getPostUrl } from '../utils/postsService'
+import { compressImageToWebP, formatBytes } from '../utils/imageOptimizer'
 
 // Categorías oficiales estándar utilizadas por Municipalidades en Chile (DIDECO, DAEM, SECPLAC, etc.)
 const MUNICIPAL_CATEGORIES = [
@@ -91,6 +92,10 @@ export default function AdminPage() {
   const [coverPreview, setCoverPreview] = useState(null)
   const [galleryFiles, setGalleryFiles] = useState([])
   const [galleryPreviews, setGalleryPreviews] = useState([])
+  const [isOptimizingCover, setIsOptimizingCover] = useState(false)
+  const [coverOptMeta, setCoverOptMeta] = useState(null)
+  const [isOptimizingGallery, setIsOptimizingGallery] = useState(false)
+  const [galleryOptMeta, setGalleryOptMeta] = useState(null)
   const [postSubmitting, setPostSubmitting] = useState(false)
   const [postSuccess, setPostSuccess] = useState(null)
   const [postError, setPostError] = useState('')
@@ -160,6 +165,8 @@ export default function AdminPage() {
   const [empFeatured, setEmpFeatured] = useState(false)
   const [empFile, setEmpFile] = useState(null)
   const [empPreview, setEmpPreview] = useState(null)
+  const [isOptimizingEmp, setIsOptimizingEmp] = useState(false)
+  const [empOptMeta, setEmpOptMeta] = useState(null)
   const [empSubmitting, setEmpSubmitting] = useState(false)
   const [empSuccess, setEmpSuccess] = useState(null)
   const [empError, setEmpError] = useState('')
@@ -229,14 +236,31 @@ export default function AdminPage() {
   }
 
   // ----------------------------------------------------
-  // COVER IMAGE HANDLERS
+  // COVER IMAGE HANDLERS (With Instant Client-Side WebP Compression)
   // ----------------------------------------------------
-  const handleCoverSelect = (e) => {
+  const handleCoverSelect = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    setIsOptimizingCover(true)
+    try {
+      const opt = await compressImageToWebP(file, 1200, 0.80)
+      if (coverPreview && !coverPreview.startsWith('http')) URL.revokeObjectURL(coverPreview)
+      setCoverFile(opt.file)
+      setCoverPreview(opt.previewUrl)
+      setCoverOptMeta({
+        originalSize: opt.originalSize,
+        optimizedSize: opt.optimizedSize,
+        savingsPercent: opt.savingsPercent
+      })
+    } catch (err) {
+      console.warn('WebP compression fallback:', err)
       if (coverPreview && !coverPreview.startsWith('http')) URL.revokeObjectURL(coverPreview)
       setCoverFile(file)
       setCoverPreview(URL.createObjectURL(file))
+      setCoverOptMeta(null)
+    } finally {
+      setIsOptimizingCover(false)
     }
   }
 
@@ -244,19 +268,44 @@ export default function AdminPage() {
     if (coverPreview && !coverPreview.startsWith('http')) URL.revokeObjectURL(coverPreview)
     setCoverFile(null)
     setCoverPreview(null)
+    setCoverOptMeta(null)
     if (coverInputRef.current) coverInputRef.current.value = ''
   }
 
   // ----------------------------------------------------
-  // GALLERY IMAGES HANDLERS
+  // GALLERY IMAGES HANDLERS (Batch WebP Compression)
   // ----------------------------------------------------
-  const handleGallerySelect = (e) => {
+  const handleGallerySelect = async (e) => {
     const selected = Array.from(e.target.files || [])
-    if (selected.length > 0) {
-      const newFiles = [...galleryFiles, ...selected]
-      setGalleryFiles(newFiles)
-      const newPreviews = selected.map(f => URL.createObjectURL(f))
+    if (selected.length === 0) return
+
+    setIsOptimizingGallery(true)
+    try {
+      const optimizedResults = await Promise.all(
+        selected.map(f => compressImageToWebP(f, 1200, 0.80))
+      )
+      const newFiles = optimizedResults.map(r => r.file)
+      const newPreviews = optimizedResults.map(r => r.previewUrl)
+
+      const totalOriginal = optimizedResults.reduce((acc, r) => acc + r.originalSize, 0)
+      const totalOptimized = optimizedResults.reduce((acc, r) => acc + r.optimizedSize, 0)
+      const totalSavings = Math.max(0, Math.round(((totalOriginal - totalOptimized) / totalOriginal) * 100))
+
+      setGalleryFiles(prev => [...prev, ...newFiles])
       setGalleryPreviews(prev => [...prev, ...newPreviews])
+      setGalleryOptMeta({
+        count: optimizedResults.length,
+        originalSize: totalOriginal,
+        optimizedSize: totalOptimized,
+        savingsPercent: totalSavings
+      })
+    } catch (err) {
+      console.warn('Gallery optimization fallback:', err)
+      const newPreviews = selected.map(f => URL.createObjectURL(f))
+      setGalleryFiles(prev => [...prev, ...selected])
+      setGalleryPreviews(prev => [...prev, ...newPreviews])
+    } finally {
+      setIsOptimizingGallery(false)
     }
   }
 
@@ -642,12 +691,29 @@ export default function AdminPage() {
     setEmpCategoryName(mapNames[val] || 'Comercio Local')
   }
 
-  const handleEmpFileSelect = (e) => {
+  const handleEmpFileSelect = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    setIsOptimizingEmp(true)
+    try {
+      const opt = await compressImageToWebP(file, 1000, 0.80)
+      if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
+      setEmpFile(opt.file)
+      setEmpPreview(opt.previewUrl)
+      setEmpOptMeta({
+        originalSize: opt.originalSize,
+        optimizedSize: opt.optimizedSize,
+        savingsPercent: opt.savingsPercent
+      })
+    } catch (err) {
+      console.warn('Emp image optimization fallback:', err)
       if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
       setEmpFile(file)
       setEmpPreview(URL.createObjectURL(file))
+      setEmpOptMeta(null)
+    } finally {
+      setIsOptimizingEmp(false)
     }
   }
 
@@ -655,6 +721,7 @@ export default function AdminPage() {
     if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
     setEmpFile(null)
     setEmpPreview(null)
+    setEmpOptMeta(null)
     if (empFileInputRef.current) empFileInputRef.current.value = ''
   }
 
@@ -1531,13 +1598,36 @@ export default function AdminPage() {
                         className="hidden"
                       />
 
-                      {coverPreview ? (
+                      {isOptimizingCover ? (
+                        <div className="w-full py-7 border-2 border-dashed border-emerald-400 bg-emerald-50/50 rounded-xl flex flex-col items-center justify-center gap-2 animate-pulse">
+                          <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin" />
+                          <span className="text-xs font-bold text-emerald-800">
+                            ⚡ Optimizando imagen a WebP de alta compresión...
+                          </span>
+                          <span className="text-[10px] text-emerald-600">
+                            Reduciendo peso automáticamente para carga ultrarrápida (ecommerce standard)
+                          </span>
+                        </div>
+                      ) : coverPreview ? (
                         <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 max-w-sm">
                           <img
                             src={coverPreview}
                             alt="Vista previa portada"
                             className="w-full aspect-[16/10] object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
+                          {coverOptMeta && (
+                            <div className="px-2.5 py-1.5 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between text-[11px] text-emerald-800">
+                              <span className="flex items-center gap-1 font-semibold">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span>WebP Ultra-Liviano: <strong>{formatBytes(coverOptMeta.optimizedSize)}</strong></span>
+                              </span>
+                              <span className="bg-emerald-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow-2xs">
+                                -{coverOptMeta.savingsPercent}% PESO
+                              </span>
+                            </div>
+                          )}
                           <div className="p-2 bg-white flex items-center justify-between gap-2 border-t border-slate-100">
                             <span className="text-[10px] sm:text-[11px] text-slate-600 truncate font-mono">
                               {coverFile ? coverFile.name : 'Foto actual'}
@@ -1559,7 +1649,7 @@ export default function AdminPage() {
                         >
                           <UploadCloud className="w-5 h-5 text-slate-400 group-hover:text-emerald-700" />
                           <span className="text-xs font-bold text-slate-700 group-hover:text-emerald-800">
-                            Clic aquí para elegir foto de portada
+                            Clic aquí para elegir foto de portada (conversión automática a WebP)
                           </span>
                         </button>
                       )}
@@ -1592,6 +1682,27 @@ export default function AdminPage() {
                         className="hidden"
                       />
 
+                      {isOptimizingGallery && (
+                        <div className="w-full py-5 border-2 border-dashed border-emerald-400 bg-emerald-50/50 rounded-xl flex flex-col items-center justify-center gap-1.5 animate-pulse">
+                          <RefreshCw className="w-5 h-5 text-emerald-600 animate-spin" />
+                          <span className="text-xs font-bold text-emerald-800">
+                            ⚡ Comprimiendo lote de imágenes a WebP ultraliviano...
+                          </span>
+                        </div>
+                      )}
+
+                      {galleryOptMeta && (
+                        <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-[11px] text-emerald-800">
+                          <span className="flex items-center gap-1.5 font-semibold">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Lote optimizado a WebP: <strong>{formatBytes(galleryOptMeta.optimizedSize)}</strong></span>
+                          </span>
+                          <span className="bg-emerald-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow-2xs">
+                            -{galleryOptMeta.savingsPercent}% PESO
+                          </span>
+                        </div>
+                      )}
+
                       {galleryPreviews.length > 0 && (
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
                           {galleryPreviews.map((previewUrl, idx) => (
@@ -1603,6 +1714,8 @@ export default function AdminPage() {
                                 src={previewUrl}
                                 alt={`Foto ${idx + 1}`}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
                               />
                               <button
                                 type="button"
@@ -1626,7 +1739,7 @@ export default function AdminPage() {
                         className="w-full py-2.5 border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/20 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer bg-white text-xs font-bold text-slate-700 hover:text-emerald-800"
                       >
                         <Plus className="w-4 h-4 text-emerald-600" />
-                        <span>{galleryPreviews.length > 0 ? '+ Agregar más fotos' : 'Seleccionar fotos para la galería'}</span>
+                        <span>{galleryPreviews.length > 0 ? '+ Agregar más fotos (conversión WebP)' : 'Seleccionar fotos para la galería (conversión WebP)'}</span>
                       </button>
                     </div>
 
@@ -2232,13 +2345,33 @@ export default function AdminPage() {
                         className="hidden"
                       />
 
-                      {empPreview ? (
+                      {isOptimizingEmp ? (
+                        <div className="w-full py-5 border-2 border-dashed border-emerald-400 bg-emerald-50/50 rounded-xl flex flex-col items-center justify-center gap-1.5 animate-pulse">
+                          <RefreshCw className="w-5 h-5 text-emerald-600 animate-spin" />
+                          <span className="text-xs font-bold text-emerald-800">
+                            ⚡ Comprimiendo imagen a WebP ultraliviano...
+                          </span>
+                        </div>
+                      ) : empPreview ? (
                         <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 max-w-xs">
                           <img
                             src={empPreview}
                             alt="Vista previa emprendimiento"
                             className="w-full aspect-[16/10] object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
+                          {empOptMeta && (
+                            <div className="px-2 py-1 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between text-[10px] text-emerald-800">
+                              <span className="font-semibold flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-emerald-600" />
+                                <span>WebP: <strong>{formatBytes(empOptMeta.optimizedSize)}</strong></span>
+                              </span>
+                              <span className="bg-emerald-600 text-white font-bold px-1.5 py-0.2 rounded-full">
+                                -{empOptMeta.savingsPercent}%
+                              </span>
+                            </div>
+                          )}
                           <div className="p-2 bg-white flex items-center justify-between gap-2 border-t border-slate-100">
                             <span className="text-[11px] text-slate-600 truncate font-mono">
                               {empFile ? empFile.name : 'Foto actual'}
@@ -2259,7 +2392,7 @@ export default function AdminPage() {
                           className="w-full py-5 border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/20 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer bg-white text-xs font-bold text-slate-700 hover:text-emerald-800"
                         >
                           <ImageIcon className="w-4 h-4 text-emerald-600" />
-                          <span>Seleccionar Foto o Logo</span>
+                          <span>Seleccionar Foto o Logo (conversión WebP)</span>
                         </button>
                       )}
                     </div>

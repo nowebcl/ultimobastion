@@ -18,7 +18,8 @@
     "pocketbase": "^0.28.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

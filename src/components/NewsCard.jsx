@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Calendar, User, Clock, ArrowRight } from 'lucide-react'
 import { formatDate, formatTimeAgo, getPostUrl } from '../utils/postsService'
 
-export default function NewsCard({ post, variant = 'default', showExcerpt = true }) {
+export default function NewsCard({ post, variant = 'default', showExcerpt = true, index = 0 }) {
   if (!post) return null
 
   const allCategories = Array.isArray(post.categories) && post.categories.length > 0
@@ -22,8 +22,9 @@ export default function NewsCard({ post, variant = 'default', showExcerpt = true
   const postUrl = getPostUrl(post)
 
   const handleImageError = (e) => {
-    e.target.onerror = null
-    e.target.src = '/images/default-news.webp'
+    if (e.currentTarget.dataset.failed) return
+    e.currentTarget.dataset.failed = 'true'
+    e.currentTarget.src = '/images/default-news.webp'
   }
 
   // 1. HORIZONTAL VARIANT (for lists or secondary sections)
@@ -37,7 +38,9 @@ export default function NewsCard({ post, variant = 'default', showExcerpt = true
           <img
             src={post.image}
             alt={post.title}
-            loading="lazy"
+            loading={index < 4 ? 'eager' : 'lazy'}
+            fetchPriority={index < 2 ? 'high' : 'auto'}
+            decoding={index < 4 ? 'sync' : 'async'}
             onError={handleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -194,7 +197,9 @@ export default function NewsCard({ post, variant = 'default', showExcerpt = true
             <img
               src={post.image}
               alt={post.title}
-              loading="lazy"
+              loading={index < 4 ? 'eager' : 'lazy'}
+              fetchPriority={index < 2 ? 'high' : 'auto'}
+              decoding={index < 4 ? 'sync' : 'async'}
               onError={handleImageError}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
