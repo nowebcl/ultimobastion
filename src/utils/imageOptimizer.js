@@ -16,7 +16,7 @@
  * @param {number} quality - Quality from 0.0 to 1.0
  * @returns {Promise<{ file: File, originalSize: number, optimizedSize: number, savingsPercent: number, previewUrl: string }>}
  */
-export async function compressImageToWebP(file, maxDimension = 1200, quality = 0.80) {
+export async function compressImageToWebP(file, maxDimension = 1200, quality = 0.70) {
   if (!file || !file.type.startsWith('image/')) {
     return {
       file,
@@ -24,17 +24,6 @@ export async function compressImageToWebP(file, maxDimension = 1200, quality = 0
       optimizedSize: file?.size || 0,
       savingsPercent: 0,
       previewUrl: file ? URL.createObjectURL(file) : ''
-    }
-  }
-
-  // If already WebP and already very small (<= 50 KB), preserve as is
-  if (file.type === 'image/webp' && file.size <= 50 * 1024) {
-    return {
-      file,
-      originalSize: file.size,
-      optimizedSize: file.size,
-      savingsPercent: 0,
-      previewUrl: URL.createObjectURL(file)
     }
   }
 

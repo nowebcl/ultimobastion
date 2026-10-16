@@ -171,6 +171,14 @@ export default function AdminPage() {
   const [empSuccess, setEmpSuccess] = useState(null)
   const [empError, setEmpError] = useState('')
 
+  // GALLERY LIMITS & EMPRENDIMIENTOS GALLERY STATE
+  const MAX_NOTICIA_GALLERY = 40
+  const MAX_EMP_GALLERY = 20
+  const [empGalleryFiles, setEmpGalleryFiles] = useState([])
+  const [empGalleryPreviews, setEmpGalleryPreviews] = useState([])
+  const [isOptimizingEmpGallery, setIsOptimizingEmpGallery] = useState(false)
+  const [empGalleryOptMeta, setEmpGalleryOptMeta] = useState(null)
+
   // EMPRENDIMIENTOS LIST & PAGINATION STATE
   const [dbEmpList, setDbEmpList] = useState([])
   const [loadingEmpList, setLoadingEmpList] = useState(false)
@@ -184,6 +192,7 @@ export default function AdminPage() {
   const coverInputRef = useRef(null)
   const galleryInputRef = useRef(null)
   const empFileInputRef = useRef(null)
+  const empGalleryInputRef = useRef(null)
 
   // In-memory cache for instant pagination & zero-latency switching
   const noticiasCacheRef = useRef(new Map())
@@ -209,8 +218,11 @@ export default function AdminPage() {
         if (!p.startsWith('http')) URL.revokeObjectURL(p)
       })
       if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
+      empGalleryPreviews.forEach(p => {
+        if (!p.startsWith('http')) URL.revokeObjectURL(p)
+      })
     }
-  }, [coverPreview, galleryPreviews, empPreview])
+  }, [coverPreview, galleryPreviews, empPreview, empGalleryPreviews])
 
   // ----------------------------------------------------
   // AUTH HANDLERS
@@ -244,7 +256,7 @@ export default function AdminPage() {
 
     setIsOptimizingCover(true)
     try {
-      const opt = await compressImageToWebP(file, 1200, 0.80)
+      const opt = await compressImageToWebP(file, 1200, 0.70)
       if (coverPreview && !coverPreview.startsWith('http')) URL.revokeObjectURL(coverPreview)
       setCoverFile(opt.file)
       setCoverPreview(opt.previewUrl)
@@ -273,16 +285,28 @@ export default function AdminPage() {
   }
 
   // ----------------------------------------------------
-  // GALLERY IMAGES HANDLERS (Batch WebP Compression)
+  // GALLERY IMAGES HANDLERS (Batch WebP Compression, Limit 40)
   // ----------------------------------------------------
   const handleGallerySelect = async (e) => {
     const selected = Array.from(e.target.files || [])
     if (selected.length === 0) return
 
+    const remainingSlots = MAX_NOTICIA_GALLERY - galleryFiles.length
+    if (remainingSlots <= 0) {
+      alert(`Has alcanzado el límite máximo de ${MAX_NOTICIA_GALLERY} imágenes en la galería de la noticia.`)
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
+      return
+    }
+
+    const filesToProcess = selected.slice(0, remainingSlots)
+    if (selected.length > remainingSlots) {
+      alert(`Solo se procesaron ${remainingSlots} imágenes para respetar el límite de ${MAX_NOTICIA_GALLERY}.`)
+    }
+
     setIsOptimizingGallery(true)
     try {
       const optimizedResults = await Promise.all(
-        selected.map(f => compressImageToWebP(f, 1200, 0.80))
+        filesToProcess.map(f => compressImageToWebP(f, 1200, 0.70))
       )
       const newFiles = optimizedResults.map(r => r.file)
       const newPreviews = optimizedResults.map(r => r.previewUrl)
@@ -301,11 +325,12 @@ export default function AdminPage() {
       })
     } catch (err) {
       console.warn('Gallery optimization fallback:', err)
-      const newPreviews = selected.map(f => URL.createObjectURL(f))
-      setGalleryFiles(prev => [...prev, ...selected])
+      const newPreviews = filesToProcess.map(f => URL.createObjectURL(f))
+      setGalleryFiles(prev => [...prev, ...filesToProcess])
       setGalleryPreviews(prev => [...prev, ...newPreviews])
     } finally {
       setIsOptimizingGallery(false)
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
     }
   }
 
@@ -314,6 +339,63 @@ export default function AdminPage() {
     if (previewToRemove && !previewToRemove.startsWith('http')) URL.revokeObjectURL(previewToRemove)
     setGalleryFiles(prev => prev.filter((_, i) => i !== index))
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // ----------------------------------------------------
+  // EMPRENDIMIENTO GALLERY HANDLERS (Batch WebP Compression, Limit 20)
+  // ----------------------------------------------------
+  const handleEmpGallerySelect = async (e) => {
+    const selected = Array.from(e.target.files || [])
+    if (selected.length === 0) return
+
+    const remainingSlots = MAX_EMP_GALLERY - empGalleryFiles.length
+    if (remainingSlots <= 0) {
+      alert(`Has alcanzado el límite máximo de ${MAX_EMP_GALLERY} imágenes en la galería del emprendimiento.`)
+      if (empGalleryInputRef.current) empGalleryInputRef.current.value = ''
+      return
+    }
+
+    const filesToProcess = selected.slice(0, remainingSlots)
+    if (selected.length > remainingSlots) {
+      alert(`Solo se procesaron ${remainingSlots} imágenes para respetar el límite de ${MAX_EMP_GALLERY}.`)
+    }
+
+    setIsOptimizingEmpGallery(true)
+    try {
+      const optimizedResults = await Promise.all(
+        filesToProcess.map(f => compressImageToWebP(f, 1000, 0.70))
+      )
+      const newFiles = optimizedResults.map(r => r.file)
+      const newPreviews = optimizedResults.map(r => r.previewUrl)
+
+      const totalOriginal = optimizedResults.reduce((acc, r) => acc + r.originalSize, 0)
+      const totalOptimized = optimizedResults.reduce((acc, r) => acc + r.optimizedSize, 0)
+      const totalSavings = Math.max(0, Math.round(((totalOriginal - totalOptimized) / totalOriginal) * 100))
+
+      setEmpGalleryFiles(prev => [...prev, ...newFiles])
+      setEmpGalleryPreviews(prev => [...prev, ...newPreviews])
+      setEmpGalleryOptMeta({
+        count: optimizedResults.length,
+        originalSize: totalOriginal,
+        optimizedSize: totalOptimized,
+        savingsPercent: totalSavings
+      })
+    } catch (err) {
+      console.warn('Emp gallery optimization fallback:', err)
+      const newPreviews = filesToProcess.map(f => URL.createObjectURL(f))
+      setEmpGalleryFiles(prev => [...prev, ...filesToProcess])
+      setEmpGalleryPreviews(prev => [...prev, ...newPreviews])
+    } finally {
+      setIsOptimizingEmpGallery(false)
+      if (empGalleryInputRef.current) empGalleryInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveEmpGalleryImage = (index) => {
+    const previewToRemove = empGalleryPreviews[index]
+    if (previewToRemove && !previewToRemove.startsWith('http')) URL.revokeObjectURL(previewToRemove)
+    setEmpGalleryFiles(prev => prev.filter((_, i) => i !== index))
+    setEmpGalleryPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   // ----------------------------------------------------
@@ -378,9 +460,8 @@ export default function AdminPage() {
 
     // Set existing cover preview
     if (post.image) {
-      const match = post.image.match(/^(\d+)_.+\.webp$/)
-      if (match) {
-        setCoverPreview(`/images/posts/${match[1]}.webp`)
+      if (typeof post.image === 'string' && (post.image.startsWith('http') || post.image.startsWith('/images/'))) {
+        setCoverPreview(post.image)
       } else {
         setCoverPreview(getPocketBaseFileUrl('noticias', post.id, post.image))
       }
@@ -697,7 +778,7 @@ export default function AdminPage() {
 
     setIsOptimizingEmp(true)
     try {
-      const opt = await compressImageToWebP(file, 1000, 0.80)
+      const opt = await compressImageToWebP(file, 1000, 0.70)
       if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
       setEmpFile(opt.file)
       setEmpPreview(opt.previewUrl)
@@ -751,6 +832,10 @@ export default function AdminPage() {
         fd.append('image', empFile)
       }
 
+      for (const f of empGalleryFiles) {
+        fd.append('gallery', f)
+      }
+
       empCacheRef.current.clear()
       const record = await pb.collection('emprendimientos').create(fd)
 
@@ -767,6 +852,9 @@ export default function AdminPage() {
       setEmpDescription('')
       setEmpFeatured(false)
       handleRemoveEmpFile()
+      setEmpGalleryFiles([])
+      setEmpGalleryPreviews([])
+      setEmpGalleryOptMeta(null)
     } catch (err) {
       console.error('Error creating emprendimiento:', err)
       setEmpError(err.message || 'Error al guardar el emprendimiento.')
@@ -1660,17 +1748,15 @@ export default function AdminPage() {
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <h4 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700">
-                            Fotos Adicionales (Galería)
+                            Fotos Adicionales (Galería — hasta 40 imágenes)
                           </h4>
                           <p className="text-[10px] sm:text-[11px] text-slate-500">
                             Se verán en la galería interactiva al final de la noticia con zoom en pantalla completa.
                           </p>
                         </div>
-                        {galleryPreviews.length > 0 && (
-                          <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                            {galleryPreviews.length} {galleryPreviews.length === 1 ? 'foto' : 'fotos'}
-                          </span>
-                        )}
+                        <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          {galleryPreviews.length} / {MAX_NOTICIA_GALLERY} fotos
+                        </span>
                       </div>
 
                       <input
@@ -1736,10 +1822,17 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => galleryInputRef.current?.click()}
-                        className="w-full py-2.5 border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/20 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer bg-white text-xs font-bold text-slate-700 hover:text-emerald-800"
+                        disabled={galleryPreviews.length >= MAX_NOTICIA_GALLERY}
+                        className="w-full py-2.5 border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/20 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer bg-white text-xs font-bold text-slate-700 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-4 h-4 text-emerald-600" />
-                        <span>{galleryPreviews.length > 0 ? '+ Agregar más fotos (conversión WebP)' : 'Seleccionar fotos para la galería (conversión WebP)'}</span>
+                        <span>
+                          {galleryPreviews.length >= MAX_NOTICIA_GALLERY
+                            ? `Límite alcanzado (${MAX_NOTICIA_GALLERY}/${MAX_NOTICIA_GALLERY} fotos)`
+                            : galleryPreviews.length > 0
+                            ? `+ Agregar más fotos (hasta ${MAX_NOTICIA_GALLERY - galleryPreviews.length} más - WebP)`
+                            : 'Seleccionar fotos para la galería (hasta 40 - conversión WebP)'}
+                        </span>
                       </button>
                     </div>
 
@@ -1949,9 +2042,8 @@ export default function AdminPage() {
                       {dbNoticiasList.map((post) => {
                         const thumbUrl = (() => {
                           if (!post.image) return '/images/default-news.webp'
-                          const match = post.image.match(/^(\d+)_.+\.webp$/)
-                          if (match) {
-                            return `/images/posts/${match[1]}.webp`
+                          if (typeof post.image === 'string' && (post.image.startsWith('http') || post.image.startsWith('/images/'))) {
+                            return post.image
                           }
                           return getPocketBaseFileUrl('noticias', post.id, post.image, '400x260')
                         })()
@@ -2082,9 +2174,8 @@ export default function AdminPage() {
                       {dbNoticiasList.map((post) => {
                         const thumbUrl = (() => {
                           if (!post.image) return '/images/default-news.webp'
-                          const match = post.image.match(/^(\d+)_.+\.webp$/)
-                          if (match) {
-                            return `/images/posts/${match[1]}.webp`
+                          if (typeof post.image === 'string' && (post.image.startsWith('http') || post.image.startsWith('/images/'))) {
+                            return post.image
                           }
                           return getPocketBaseFileUrl('noticias', post.id, post.image, '120x90')
                         })()
@@ -2395,6 +2486,100 @@ export default function AdminPage() {
                           <span>Seleccionar Foto o Logo (conversión WebP)</span>
                         </button>
                       )}
+                    </div>
+
+                    {/* GALERÍA DE FOTOS DEL EMPRENDIMIENTO (Hasta 20 imágenes WebP) */}
+                    <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                            <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Galería de Fotos del Emprendimiento</span>
+                          </h4>
+                          <p className="text-[10px] sm:text-[11px] text-slate-500">
+                            Fotos de platos, cabañas, transporte, recorridos o instalaciones (hasta 20 fotos WebP ultraliviano).
+                          </p>
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          {empGalleryPreviews.length} / {MAX_EMP_GALLERY} fotos
+                        </span>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={empGalleryInputRef}
+                        onChange={handleEmpGallerySelect}
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                      />
+
+                      {isOptimizingEmpGallery && (
+                        <div className="w-full py-5 border-2 border-dashed border-emerald-400 bg-emerald-50/50 rounded-xl flex flex-col items-center justify-center gap-1.5 animate-pulse">
+                          <RefreshCw className="w-5 h-5 text-emerald-600 animate-spin" />
+                          <span className="text-xs font-bold text-emerald-800">
+                            ⚡ Comprimiendo galería a WebP ultraliviano...
+                          </span>
+                        </div>
+                      )}
+
+                      {empGalleryOptMeta && (
+                        <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-[11px] text-emerald-800">
+                          <span className="flex items-center gap-1.5 font-semibold">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Lote optimizado a WebP: <strong>{formatBytes(empGalleryOptMeta.optimizedSize)}</strong></span>
+                          </span>
+                          <span className="bg-emerald-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow-2xs">
+                            -{empGalleryOptMeta.savingsPercent}% PESO
+                          </span>
+                        </div>
+                      )}
+
+                      {empGalleryPreviews.length > 0 && (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
+                          {empGalleryPreviews.map((previewUrl, idx) => (
+                            <div
+                              key={idx}
+                              className="relative aspect-4/3 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group shadow-2xs"
+                            >
+                              <img
+                                src={previewUrl}
+                                alt={`Foto galería ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEmpGalleryImage(idx)}
+                                className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full shadow-md"
+                                title="Quitar foto"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                              <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 py-0.2 rounded font-mono">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => empGalleryInputRef.current?.click()}
+                        disabled={empGalleryPreviews.length >= MAX_EMP_GALLERY}
+                        className="w-full py-2.5 border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/20 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer bg-white text-xs font-bold text-slate-700 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-4 h-4 text-emerald-600" />
+                        <span>
+                          {empGalleryPreviews.length >= MAX_EMP_GALLERY
+                            ? `Límite alcanzado (${MAX_EMP_GALLERY}/${MAX_EMP_GALLERY} fotos)`
+                            : empGalleryPreviews.length > 0
+                            ? `+ Agregar más fotos a la galería (hasta ${MAX_EMP_GALLERY - empGalleryPreviews.length} más - WebP)`
+                            : 'Seleccionar fotos para la galería (hasta 20 - conversión WebP)'}
+                        </span>
+                      </button>
                     </div>
 
                     <div className="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between">

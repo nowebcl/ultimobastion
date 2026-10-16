@@ -106,8 +106,14 @@ export default function HomePage() {
   }, [])
 
   const allPosts = getAllPostsIndex()
-  const featuredLead = allPosts[0]
-  const secondaryFeatured = allPosts.slice(1, 5)
+  const featuredPost = allPosts.find(p => p.featured === true)
+  const featuredLead = featuredPost || allPosts[0]
+
+  // Remaining posts excluding the lead
+  const remainingPosts = allPosts.filter(p => p.id !== featuredLead?.id)
+  const otherFeatured = remainingPosts.filter(p => p.featured === true)
+  const regularPosts = remainingPosts.filter(p => !p.featured)
+  const secondaryFeatured = [...otherFeatured, ...regularPosts].slice(0, 4)
 
   // Track used post IDs so sections never duplicate content
   const usedIds = new Set([featuredLead?.id, ...secondaryFeatured.map(p => p.id)].filter(Boolean))
@@ -576,7 +582,7 @@ export default function HomePage() {
                   src={row3Destacado?.image}
                   alt={row3Destacado?.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/site/hero-landscape-clean.webp' }}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/default-news.webp' }}
                 />
               </Link>
               <Link to={getPostUrl(row3Destacado)}>

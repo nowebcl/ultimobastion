@@ -28,17 +28,22 @@ export function transformDbNoticia(record) {
   }))
 
   let coverUrl = '/images/default-news.webp'
-  if (record.image) {
-    const match = record.image.match(/^(\d+)_.+\.webp$/)
-    if (match) {
-      coverUrl = `/images/posts/${match[1]}.webp`
+  if (record.image && typeof record.image === 'string' && record.image.trim()) {
+    if (record.image.startsWith('http://') || record.image.startsWith('https://') || record.image.startsWith('/images/')) {
+      coverUrl = record.image
     } else {
       coverUrl = getPocketBaseFileUrl('noticias', record.id, record.image)
     }
   }
 
   const galleryUrls = Array.isArray(record.gallery)
-    ? record.gallery.map(img => getPocketBaseFileUrl('noticias', record.id, img))
+    ? record.gallery.map(img => {
+        if (!img) return null
+        if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/images/'))) {
+          return img
+        }
+        return getPocketBaseFileUrl('noticias', record.id, img)
+      }).filter(Boolean)
     : []
 
   // Ensure clean excerpt
@@ -73,9 +78,9 @@ export async function syncDbPosts() {
 
   syncPromise = (async () => {
     try {
-      const records = await pb.collection('noticias').getList(1, 20, {
-        sort: '-date',
-        fields: 'id,title,slug,date,category,author,excerpt,image,gallery,featured',
+      const records = await pb.collection('noticias').getList(1, 50, {
+        sort: '-date,-created',
+        fields: 'id,title,slug,date,created,category,author,excerpt,content,image,gallery,featured',
         requestKey: null
       })
 
@@ -108,11 +113,11 @@ if (typeof window !== 'undefined') {
 
 export function getAllPostsIndex() {
   if (liveDbPosts.length > 0) {
-    const existingSlugs = new Set(postsIndex.map(p => p.slug))
-    const trulyNew = liveDbPosts.filter(p => !existingSlugs.has(p.slug))
-    if (trulyNew.length > 0) {
-      return [...trulyNew, ...postsIndex]
-    }
+    const dbBySlug = new Map(liveDbPosts.map(p => [p.slug, p]))
+    const staticSlugs = new Set(postsIndex.map(p => p.slug))
+    const trulyNew = liveDbPosts.filter(p => !staticSlugs.has(p.slug))
+    const mergedStatic = postsIndex.map(p => dbBySlug.get(p.slug) || p)
+    return [...trulyNew, ...mergedStatic]
   }
   return postsIndex
 }
@@ -282,7 +287,21 @@ export async function getPostBySlug(slug) {
     return dbMatch
   }
 
-  // 2. Check static archive first (instant 1ms load for all 701 historical articles)
+  // 2. Query PocketBase directly (so DB edits and fresh posts take immediate precedence)
+  try {
+    const record = await pb.collection('noticias').getFirstListItem(`slug="${slug}" || id="${slug}"`, {
+      requestKey: null
+    })
+    if (record) {
+      const transformed = transformDbNoticia(record)
+      postCache.set(transformed.id, transformed)
+      return transformed
+    }
+  } catch {
+    // Not in DB, fallback to static archive
+  }
+
+  // 3. Check static archive (instant load for historical articles)
   const indexPost = postsIndex.find(p => p.slug === slug || String(p.id) === slug)
   if (indexPost) {
     if (postCache.has(indexPost.id)) {
@@ -301,20 +320,6 @@ export async function getPostBySlug(slug) {
     }
 
     return indexPost
-  }
-
-  // 3. Fallback: Query PocketBase directly for newly created posts
-  try {
-    const record = await pb.collection('noticias').getFirstListItem(`slug="${slug}"`, {
-      requestKey: null
-    })
-    if (record) {
-      const transformed = transformDbNoticia(record)
-      postCache.set(transformed.id, transformed)
-      return transformed
-    }
-  } catch {
-    // Not found
   }
 
   return null
