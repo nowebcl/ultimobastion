@@ -111,7 +111,15 @@ export default function PostDetailPage() {
   const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
   const articleContentRef = useRef(null)
-  const allPosts = useMemo(() => getAllPostsIndex(), [])
+  const [postsVersion, setPostsVersion] = useState(0)
+
+  useEffect(() => {
+    const handleUpdate = () => setPostsVersion(v => v + 1)
+    window.addEventListener('bastion:posts-updated', handleUpdate)
+    return () => window.removeEventListener('bastion:posts-updated', handleUpdate)
+  }, [])
+
+  const allPosts = useMemo(() => getAllPostsIndex(), [postsVersion])
 
   // Check if article has human neural MP3 pre-rendered
   useEffect(() => {
@@ -329,10 +337,15 @@ export default function PostDetailPage() {
     }
   }, [post, allPosts])
 
-  // Deterministic reads counter
+  // Deterministic reads counter (supports numeric and string PocketBase IDs)
+  const getSafeIdNum = (id) =>
+    typeof id === 'number' && !isNaN(id)
+      ? id
+      : String(id || '').split('').reduce((acc, ch, i) => acc + ch.charCodeAt(0) * (i + 1), 0)
+
   const readViews = useMemo(() => {
     if (!post) return '450'
-    const base = ((post.id * 17) % 850) + 220
+    const base = ((getSafeIdNum(post.id) * 17) % 850) + 220
     return base > 999 ? `${(base / 1000).toFixed(1)}K` : `${base}`
   }, [post])
 
@@ -1129,7 +1142,7 @@ export default function PostDetailPage() {
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
                         <span>{formatTimeAgo(item.date)}</span>
                         <span>•</span>
-                        <span>{((item.id * 19) % 800) + 210} lecturas</span>
+                        <span>{((getSafeIdNum(item.id) * 19) % 800) + 210} lecturas</span>
                       </div>
                     </div>
                   </article>

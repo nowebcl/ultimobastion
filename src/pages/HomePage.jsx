@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-  Play, Calendar, Eye, Clock, ArrowRight, X 
+  Play, Calendar, Eye, Clock, ArrowRight, X, ChevronLeft, ChevronRight 
 } from 'lucide-react'
 import BreakingTicker from '../components/BreakingTicker'
 import { 
@@ -73,23 +73,26 @@ const getDisplayCategory = (post) => {
   return nonGeneric ? nonGeneric.name : post.categories[0].name
 }
 
-// Deterministic views counter based on post ID
+// Deterministic views counter based on post ID (supports both numeric and string PocketBase IDs)
 const getDisplayViews = (post) => {
   if (!post) return '450'
-  const base = ((post.id * 19) % 900) + 210
+  const numId = typeof post.id === 'number' && !isNaN(post.id)
+    ? post.id
+    : String(post.id || '').split('').reduce((acc, ch, i) => acc + ch.charCodeAt(0) * (i + 1), 0)
+  const base = ((numId * 19) % 900) + 210
   return base > 999 ? `${(base / 1000).toFixed(1)}K` : `${base}`
 }
 
 // Category text colors for secondary items (matches mockup style)
 const getCategoryColor = (post, index) => {
   const cat = (getDisplayCategory(post) || '').toLowerCase()
-  if (cat.includes('proyect') || cat.includes('infraestruct')) return 'text-sky-600'
+  if (cat.includes('proyect') || cat.includes('infraestruct') || cat.includes('obras')) return 'text-sky-600'
   if (cat.includes('salud')) return 'text-rose-600'
-  if (cat.includes('deport') || cat.includes('comunid')) return 'text-[#05a353]'
+  if (cat.includes('deport') || cat.includes('comunid') || cat.includes('organizac')) return 'text-[#05a353]'
   if (cat.includes('turism') || cat.includes('medio')) return 'text-teal-600'
   if (cat.includes('cultur')) return 'text-purple-600'
   if (cat.includes('educac')) return 'text-amber-600'
-  if (cat.includes('foment')) return 'text-blue-600'
+  if (cat.includes('foment') || cat.includes('rural')) return 'text-blue-600'
   
   const palette = ['text-sky-600', 'text-[#05a353]', 'text-teal-600', 'text-purple-600']
   return palette[index % palette.length]
@@ -97,6 +100,8 @@ const getCategoryColor = (post, index) => {
 
 export default function HomePage() {
   const [activeVideo, setActiveVideo] = useState(null)
+  const [heroIndex, setHeroIndex] = useState(0)
+  const [heroPaused, setHeroPaused] = useState(false)
   const [, setVersion] = useState(0)
 
   useEffect(() => {
@@ -106,17 +111,30 @@ export default function HomePage() {
   }, [])
 
   const allPosts = getAllPostsIndex()
-  const featuredPost = allPosts.find(p => p.featured === true)
-  const featuredLead = featuredPost || allPosts[0]
+  const heroSlides = allPosts.slice(0, 5)
+  const safeHeroIndex = heroSlides.length > 0 ? heroIndex % heroSlides.length : 0
+  const featuredLead = heroSlides[safeHeroIndex] || allPosts[0]
 
-  // Remaining posts excluding the lead
-  const remainingPosts = allPosts.filter(p => p.id !== featuredLead?.id)
-  const otherFeatured = remainingPosts.filter(p => p.featured === true)
-  const regularPosts = remainingPosts.filter(p => !p.featured)
-  const secondaryFeatured = [...otherFeatured, ...regularPosts].slice(0, 4)
+  // Auto-advance hero cover through the latest 5 news every 6 seconds
+  useEffect(() => {
+    if (heroPaused || heroSlides.length <= 1) return
+    const timer = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % heroSlides.length)
+    }, 6000)
+    return () => clearInterval(timer)
+  }, [heroPaused, heroSlides.length])
 
-  // Track used post IDs so sections never duplicate content
-  const usedIds = new Set([featuredLead?.id, ...secondaryFeatured.map(p => p.id)].filter(Boolean))
+  // Latest news for the right-hand "Últimas noticias" column (chronological order)
+  const secondaryFeatured = allPosts.slice(1, 5)
+
+  // Track used post IDs from top 5 so lower sections never duplicate them
+  const usedIds = new Set(allPosts.slice(0, 5).map(p => p.id).filter(Boolean))
+
+  const hasCat = (post, keywords) =>
+    post.categories?.some(c => {
+      const s = (c.slug || '').toLowerCase()
+      return keywords.some(k => s.includes(k))
+    })
 
   const findPost = (predicate, fallbackIdx) => {
     const found = allPosts.find(p => !usedIds.has(p.id) && predicate(p))
@@ -130,15 +148,15 @@ export default function HomePage() {
   }
 
   // Row 1: 3 News Cards (Cultura, Proyectos, Fomento - exact match with original site)
-  const row1Cultura = findPost(p => p.categories?.some(c => c.slug === 'cultura-comunidad'), 5)
-  const row1Proyectos = findPost(p => p.categories?.some(c => c.slug === 'proyectos'), 6)
-  const row1Fomento = findPost(p => p.categories?.some(c => c.slug === 'fomento'), 7)
+  const row1Cultura = findPost(p => hasCat(p, ['cultur', 'patrimonio']), 5)
+  const row1Proyectos = findPost(p => hasCat(p, ['proyect', 'obras', 'secplan', 'infraestruct']), 6)
+  const row1Fomento = findPost(p => hasCat(p, ['foment', 'omil', 'rural', 'pesca']), 7)
 
   // Row 2: 4 Category Cards (Salud, Turismo, Comunidad, Medio Ambiente)
-  const row2Salud = findPost(p => p.categories?.some(c => c.slug === 'salud'), 8)
-  const row2Turismo = findPost(p => p.categories?.some(c => c.slug === 'turismo'), 9)
-  const row2Comunidad = findPost(p => p.title?.toLowerCase().includes('adulto') || p.title?.toLowerCase().includes('comunitari') || p.categories?.some(c => c.slug === 'agrupaciones-comunitarias'), 10)
-  const row2MedioAmbiente = findPost(p => p.title?.toLowerCase().includes('humedal') || p.title?.toLowerCase().includes('costero') || p.title?.toLowerCase().includes('limpieza') || p.title?.toLowerCase().includes('rio'), 11)
+  const row2Salud = findPost(p => hasCat(p, ['salud', 'cesfam']), 8)
+  const row2Turismo = findPost(p => hasCat(p, ['turism']), 9)
+  const row2Comunidad = findPost(p => p.title?.toLowerCase().includes('adulto') || p.title?.toLowerCase().includes('comunitari') || hasCat(p, ['comunitari', 'dideco', 'organizac']), 10)
+  const row2MedioAmbiente = findPost(p => p.title?.toLowerCase().includes('humedal') || p.title?.toLowerCase().includes('costero') || p.title?.toLowerCase().includes('limpieza') || p.title?.toLowerCase().includes('rio') || hasCat(p, ['medio-ambiente']), 11)
 
   // Row 3: Más Noticias (5 items), Destacado (1 item), Visita
   const row3MasNoticias = []
@@ -149,8 +167,8 @@ export default function HomePage() {
   const row3Destacado = findPost(p => p.title?.toLowerCase().includes('costa') || p.title?.toLowerCase().includes('desarrollo') || p.title?.toLowerCase().includes('proyecto') || p.title?.toLowerCase().includes('iniciativa'), 18)
 
   // Row 4: Deporte, Educación, Videos
-  const row4Deportes = findPost(p => p.categories?.some(c => c.slug === 'deporte'), 19)
-  const row4Educacion = findPost(p => p.categories?.some(c => c.slug === 'educacion'), 20)
+  const row4Deportes = findPost(p => hasCat(p, ['deport']), 19)
+  const row4Educacion = findPost(p => hasCat(p, ['educac', 'daem']), 20)
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
@@ -163,10 +181,15 @@ export default function HomePage() {
           
           {/* LEFT COLUMN: Large Featured Story (lg:col-span-8) */}
           <div className="lg:col-span-8 flex">
-            <div className="relative rounded-2xl overflow-hidden shadow-md group w-full min-h-[460px] lg:min-h-[520px] flex flex-col justify-end p-6 sm:p-8 bg-slate-900 border border-slate-200/60">
+            <div 
+              onMouseEnter={() => setHeroPaused(true)}
+              onMouseLeave={() => setHeroPaused(false)}
+              className="relative rounded-2xl overflow-hidden shadow-md group w-full min-h-[460px] lg:min-h-[520px] flex flex-col justify-end p-6 sm:p-8 bg-slate-900 border border-slate-200/60"
+            >
               
               {/* Background Image of real post */}
               <img
+                key={featuredLead?.id || 'hero-img'}
                 src={featuredLead?.image || '/images/site/hero-mockup.webp'}
                 alt={featuredLead?.title || 'Noticia destacada'}
                 loading="eager"
@@ -183,18 +206,58 @@ export default function HomePage() {
               {/* Dark Gradient Overlay for crystal clarity */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent" />
 
+              {/* Top-Right Carousel Controls for Latest News in Portada */}
+              {heroSlides.length > 1 && (
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15">
+                  <div className="flex items-center gap-1.5 mr-1">
+                    {heroSlides.map((slide, idx) => (
+                      <button
+                        key={slide.id || idx}
+                        type="button"
+                        onClick={() => setHeroIndex(idx)}
+                        aria-label={`Ver noticia reciente ${idx + 1}`}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          idx === safeHeroIndex
+                            ? 'w-5 bg-[#05a353]'
+                            : 'w-1.5 bg-white/45 hover:bg-white/80'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setHeroIndex(prev => (prev - 1 + heroSlides.length) % heroSlides.length)}
+                    aria-label="Noticia anterior"
+                    className="text-white/80 hover:text-white transition-colors cursor-pointer p-0.5"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHeroIndex(prev => (prev + 1) % heroSlides.length)}
+                    aria-label="Siguiente noticia"
+                    className="text-white/80 hover:text-white transition-colors cursor-pointer p-0.5"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               {/* Foreground Content */}
               <div className="relative z-10 space-y-3">
                 {/* Green Category Pill */}
-                <div>
+                <div className="flex items-center gap-2">
                   <span className="bg-[#05a353] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md shadow-xs inline-block">
                     {getDisplayCategory(featuredLead)}
+                  </span>
+                  <span className="bg-white/15 backdrop-blur-xs text-white/90 text-[10px] font-semibold px-2.5 py-0.5 rounded-md border border-white/15">
+                    {formatTimeAgo(featuredLead?.date)}
                   </span>
                 </div>
 
                 {/* Title */}
                 <Link to={featuredLead ? getPostUrl(featuredLead) : '#'}>
-                  <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-white font-serif leading-[1.25] tracking-tight group-hover:text-amber-200 transition-colors drop-shadow-sm">
+                  <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-white font-serif leading-[1.25] tracking-tight group-hover:text-amber-200 transition-colors drop-shadow-sm line-clamp-3">
                     {featuredLead?.title}
                   </h1>
                 </Link>

@@ -17,8 +17,16 @@ import {
   getCurrentAdminUser, 
   getPocketBaseFileUrl 
 } from '../utils/pocketbase'
-import { syncDbPosts, getActiveCategoriesWithPosts, getPostUrl } from '../utils/postsService'
+import { syncDbPosts, getActiveCategoriesWithPosts, getPostUrl, getPostDateKey } from '../utils/postsService'
 import { compressImageToWebP, formatBytes } from '../utils/imageOptimizer'
+
+const getTodayDateInput = () => {
+  const now = new Date()
+  const y = String(now.getFullYear())
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 // Categorías oficiales estándar utilizadas por Municipalidades en Chile (DIDECO, DAEM, SECPLAC, etc.)
 const MUNICIPAL_CATEGORIES = [
@@ -87,6 +95,7 @@ export default function AdminPage() {
   const [postAuthor, setPostAuthor] = useState('Redacción Último Bastión')
   const [postExcerpt, setPostExcerpt] = useState('')
   const [postContent, setPostContent] = useState('')
+  const [postDate, setPostDate] = useState(() => getTodayDateInput())
   const [postFeatured, setPostFeatured] = useState(false)
   const [coverFile, setCoverFile] = useState(null)
   const [coverPreview, setCoverPreview] = useState(null)
@@ -456,6 +465,7 @@ export default function AdminPage() {
 
     setPostAuthor(post.author || 'Redacción Último Bastión')
     setPostExcerpt(post.excerpt || '')
+    setPostDate(getPostDateKey(post.date) || getTodayDateInput())
     setPostFeatured(Boolean(post.featured))
 
     // Set existing cover preview
@@ -505,6 +515,7 @@ export default function AdminPage() {
     setNewCategoryInput('')
     setPostExcerpt('')
     setPostContent('')
+    setPostDate(getTodayDateInput())
     setPostFeatured(false)
     handleRemoveCover()
     setGalleryFiles([])
@@ -575,6 +586,13 @@ export default function AdminPage() {
       }
 
       const categoryString = selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Actualidad y Comuna'
+      const chosenDay = (postDate || getTodayDateInput()).trim()
+      const nowLocal = new Date()
+      const pad2 = n => String(n).padStart(2, '0')
+      const timeSuffix = chosenDay === getTodayDateInput()
+        ? `${pad2(nowLocal.getHours())}:${pad2(nowLocal.getMinutes())}:${pad2(nowLocal.getSeconds())}`
+        : '12:00:00'
+
       fd.append('title', postTitle.trim())
       fd.append('slug', finalSlug)
       fd.append('category', categoryString)
@@ -582,9 +600,7 @@ export default function AdminPage() {
       fd.append('excerpt', finalExcerpt)
       fd.append('content', cleanContent)
       fd.append('featured', postFeatured ? 'true' : 'false')
-      if (!editingPostId) {
-        fd.append('date', new Date().toISOString())
-      }
+      fd.append('date', `${chosenDay}T${timeSuffix}`)
 
       // Append cover image if a new file was chosen
       if (coverFile) {
@@ -636,6 +652,7 @@ export default function AdminPage() {
         setNewCategoryInput('')
         setPostExcerpt('')
         setPostContent('')
+        setPostDate(getTodayDateInput())
         setPostFeatured(false)
         handleRemoveCover()
         setGalleryFiles([])
@@ -1834,6 +1851,24 @@ export default function AdminPage() {
                             : 'Seleccionar fotos para la galería (hasta 40 - conversión WebP)'}
                         </span>
                       </button>
+                    </div>
+
+                    {/* Fecha de Publicación */}
+                    <div className="border border-slate-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800">
+                          Fecha de Publicación (Calendario)
+                        </h4>
+                        <p className="text-[10px] sm:text-[11px] text-slate-500">
+                          Define en qué día del calendario aparece publicada la noticia.
+                        </p>
+                      </div>
+                      <input
+                        type="date"
+                        value={postDate}
+                        onChange={(e) => setPostDate(e.target.value)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 outline-none"
+                      />
                     </div>
 
                     {/* Destacar Noticia */}

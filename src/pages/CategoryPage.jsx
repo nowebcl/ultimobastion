@@ -15,6 +15,13 @@ export default function CategoryPage() {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parseInt(searchParams.get('p') || '1', 10)
+  const [, setVersion] = useState(0)
+
+  useEffect(() => {
+    const handleUpdate = () => setVersion(v => v + 1)
+    window.addEventListener('bastion:posts-updated', handleUpdate)
+    return () => window.removeEventListener('bastion:posts-updated', handleUpdate)
+  }, [])
   
   const [filterQuery, setFilterQuery] = useState('')
   const category = getCategoryBySlug(slug) || { name: slug.replace(/-/g, ' ').toUpperCase(), slug }

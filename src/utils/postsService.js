@@ -2,8 +2,22 @@ import postsIndex from '../data/posts_index.json'
 import categoriesData from '../data/categories.json'
 import { pb, getPocketBaseFileUrl } from './pocketbase.js'
 
-// In-memory cache for live database posts
-let liveDbPosts = []
+// In-memory cache for live database posts (initialized from localStorage if available for 0ms first paint)
+const LIVE_CACHE_KEY = 'bastion_live_db_posts_v3'
+let liveDbPosts = (() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = window.localStorage.getItem(LIVE_CACHE_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }
+  return []
+})()
 let isDbSynced = false
 let syncPromise = null
 
@@ -57,7 +71,7 @@ export function transformDbNoticia(record) {
     id: record.id,
     slug: record.slug,
     title: record.title,
-    date: record.date || record.created,
+    date: record.date || new Date().toISOString(),
     excerpt: excerpt,
     content: record.content || '',
     category: rawCategories.join(', '),
@@ -79,16 +93,22 @@ export async function syncDbPosts() {
   syncPromise = (async () => {
     try {
       const records = await pb.collection('noticias').getList(1, 50, {
-        sort: '-date,-created',
-        fields: 'id,title,slug,date,created,category,author,excerpt,content,image,gallery,featured',
+        sort: '-date',
+        fields: 'id,title,slug,date,category,author,excerpt,content,image,gallery,featured',
         requestKey: null
       })
 
       liveDbPosts = records.items.map(transformDbNoticia)
       isDbSynced = true
 
-      // Notify any listening components
       if (typeof window !== 'undefined') {
+        try {
+          // Persist lightweight version (without heavy content) for instant next load
+          const liteCache = liveDbPosts.map(({ content, ...rest }) => rest)
+          window.localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(liteCache))
+        } catch {
+          // ignore quota errors
+        }
         window.dispatchEvent(new CustomEvent('bastion:posts-updated', { detail: liveDbPosts }))
       }
 
@@ -104,20 +124,24 @@ export async function syncDbPosts() {
   return syncPromise
 }
 
-// Trigger initial sync non-blockingly
+// Trigger initial sync immediately
 if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    syncDbPosts()
-  }, 10)
+  syncDbPosts()
 }
 
 export function getAllPostsIndex() {
   if (liveDbPosts.length > 0) {
     const dbBySlug = new Map(liveDbPosts.map(p => [p.slug, p]))
-    const staticSlugs = new Set(postsIndex.map(p => p.slug))
+    const baseArchive = postsIndex.filter(p => !p.isDb)
+    const staticSlugs = new Set(baseArchive.map(p => p.slug))
     const trulyNew = liveDbPosts.filter(p => !staticSlugs.has(p.slug))
-    const mergedStatic = postsIndex.map(p => dbBySlug.get(p.slug) || p)
-    return [...trulyNew, ...mergedStatic]
+    const mergedStatic = baseArchive.map(p => dbBySlug.get(p.slug) || p)
+    const combined = [...trulyNew, ...mergedStatic]
+    return combined.sort((a, b) => {
+      const tA = a.date ? new Date(a.date).getTime() : 0
+      const tB = b.date ? new Date(b.date).getTime() : 0
+      return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA)
+    })
   }
   return postsIndex
 }
@@ -140,7 +164,7 @@ export function getCategories() {
           item.count = (item.count || 0) + 1
         } else {
           map.set(s, {
-            id: cat.id || 900 + map.size,
+            id: 900 + map.size,
             name: cat.name,
             slug: cat.slug,
             count: 1
@@ -199,10 +223,29 @@ export function getLatestPosts(count = 10, offset = 0) {
   return all.slice(offset, offset + count)
 }
 
+const CATEGORY_SLUG_ALIASES = {
+  'cultura-comunidad': ['cultura-comunidad', 'cultura-fiestas-y-patrimonio', 'cultura'],
+  'proyectos': ['proyectos', 'obras-y-proyectos-secplan', 'infraestructura'],
+  'fomento': ['fomento', 'fomento-productivo-y-omil', 'desarrollo-rural-y-pesca'],
+  'salud': ['salud', 'salud-y-cesfam'],
+  'turismo': ['turismo', 'turismo-y-fomento-comunal'],
+  'deporte': ['deporte', 'deportes-y-vida-sana'],
+  'educacion': ['educacion', 'educacion-y-daem'],
+  'seguridad': ['seguridad', 'seguridad-publica-y-emergencias'],
+  'agrupaciones-comunitarias': ['agrupaciones-comunitarias', 'organizaciones-comunitarias', 'dideco-y-accion-social'],
+  'desarrollo-social-y-comunitario': ['desarrollo-social-y-comunitario', 'dideco-y-accion-social', 'organizaciones-comunitarias'],
+  'medio-ambiente': ['medio-ambiente', 'medio-ambiente-y-aseo']
+}
+
 export function getPostsByCategory(categorySlug, page = 1, perPage = 12) {
   const all = getAllPostsIndex()
-  const filtered = all.filter(p => 
-    p.categories && p.categories.some(c => c.slug === categorySlug || c.slug.toLowerCase() === categorySlug.toLowerCase())
+  const target = (categorySlug || '').toLowerCase().trim()
+  const validSlugs = new Set(CATEGORY_SLUG_ALIASES[target] || [target])
+  const filtered = all.filter(p =>
+    p.categories && p.categories.some(c => {
+      const s = (c.slug || '').toLowerCase()
+      return validSlugs.has(s) || s.includes(target)
+    })
   )
   const total = filtered.length
   const totalPages = Math.ceil(total / perPage)
@@ -345,6 +388,25 @@ export function getRelatedPosts(currentPost, limit = 4) {
   }
 
   return related.slice(0, limit)
+}
+
+/**
+ * Extract canonical YYYY-MM-DD calendar date in local time (matching formatDate & getPostUrl)
+ */
+export function getPostDateKey(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    if (!isNaN(d.getTime())) {
+      const y = String(d.getFullYear())
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+  } catch {
+    // fallback
+  }
+  return String(dateStr).slice(0, 10)
 }
 
 export function formatDate(dateStr) {

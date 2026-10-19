@@ -4,7 +4,7 @@ import {
   Search, Filter, Newspaper, ChevronLeft, ChevronRight, 
   Calendar as CalendarIcon, X, Check, Clock, Eye, Sparkles, RotateCcw
 } from 'lucide-react'
-import { getCategories, getAllPostsIndex, formatDate, formatTimeAgo } from '../utils/postsService'
+import { getCategories, getAllPostsIndex, formatDate, formatTimeAgo, getPostDateKey, syncDbPosts } from '../utils/postsService'
 import NewsCard from '../components/NewsCard'
 
 const MONTH_NAMES = [
@@ -19,9 +19,17 @@ export default function SearchPage() {
   const initialQuery = searchParams.get('q') || ''
   const initialCat = searchParams.get('cat') || ''
   const initialDate = searchParams.get('fecha') || ''
+  const [version, setVersion] = useState(0)
 
-  const allPosts = useMemo(() => getAllPostsIndex(), [])
-  const categories = useMemo(() => getCategories(), [])
+  useEffect(() => {
+    const handleUpdate = () => setVersion(v => v + 1)
+    window.addEventListener('bastion:posts-updated', handleUpdate)
+    syncDbPosts()
+    return () => window.removeEventListener('bastion:posts-updated', handleUpdate)
+  }, [])
+
+  const allPosts = useMemo(() => getAllPostsIndex(), [version])
+  const categories = useMemo(() => getCategories(), [version])
 
   // Filters state
   const [query, setQuery] = useState(initialQuery)
@@ -34,18 +42,34 @@ export default function SearchPage() {
   const [calYear, setCalYear] = useState(2026)
   const [calMonth, setCalMonth] = useState(9) // 0-indexed: 9 = October
 
-  // Group posts by date (YYYY-MM-DD) for 0ms instant lookups
+  // Group posts by canonical local date (YYYY-MM-DD) for 0ms instant lookups
   const postsByDate = useMemo(() => {
     const map = {}
     for (const p of allPosts) {
-      if (p.date) {
-        const d = p.date.slice(0, 10)
+      const d = getPostDateKey(p.date)
+      if (d) {
         if (!map[d]) map[d] = []
         map[d].push(p)
       }
     }
     return map
   }, [allPosts])
+
+  // Dynamic top 5 latest dates that have publications
+  const recentDateShortcuts = useMemo(() => {
+    return Object.keys(postsByDate)
+      .sort((a, b) => b.localeCompare(a))
+      .slice(0, 5)
+      .map(dateKey => {
+        const [, m, d] = dateKey.split('-').map(Number)
+        const monthName = MONTH_NAMES[(m || 1) - 1] || ''
+        const count = postsByDate[dateKey]?.length || 0
+        return {
+          dateKey,
+          label: `${d} de ${monthName} (${count} ${count === 1 ? 'nota' : 'notas'})`
+        }
+      })
+  }, [postsByDate])
 
   // Sync state with URL params
   useEffect(() => {
@@ -67,9 +91,9 @@ export default function SearchPage() {
   const filteredPosts = useMemo(() => {
     let result = allPosts
 
-    // 1. Date filter
+    // 1. Date filter (using canonical local date key)
     if (selectedDate) {
-      result = result.filter(p => p.date && p.date.startsWith(selectedDate))
+      result = result.filter(p => getPostDateKey(p.date) === selectedDate)
     }
 
     // 2. Category filter
@@ -176,7 +200,7 @@ export default function SearchPage() {
                 Noticias Publicadas en Maullín
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mt-1 leading-relaxed">
-                Archivo histórico interactivo con las <strong>701 noticias</strong> oficiales. Revisa las notas por día con el calendario o busca por palabras clave al instante.
+                Archivo histórico interactivo con las <strong>{allPosts.length} noticias</strong> oficiales. Revisa las notas por día con el calendario o busca por palabras clave al instante.
               </p>
             </div>
 
@@ -259,44 +283,23 @@ export default function SearchPage() {
             </span>
             <button
               onClick={() => setSelectedDate('')}
-              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
+              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors cursor-pointer ${
                 !selectedDate ? 'bg-[#002845] text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              Todas las fechas (701)
+              Todas las fechas ({allPosts.length})
             </button>
-            <button
-              onClick={() => setSelectedDate('2026-10-06')}
-              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
-                selectedDate === '2026-10-06' ? 'bg-[#05a353] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              6 de Octubre (4 notas)
-            </button>
-            <button
-              onClick={() => setSelectedDate('2026-10-04')}
-              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
-                selectedDate === '2026-10-04' ? 'bg-[#05a353] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              4 de Octubre (2 notas)
-            </button>
-            <button
-              onClick={() => setSelectedDate('2026-10-03')}
-              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
-                selectedDate === '2026-10-03' ? 'bg-[#05a353] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              3 de Octubre (6 notas)
-            </button>
-            <button
-              onClick={() => setSelectedDate('2026-09-30')}
-              className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
-                selectedDate === '2026-09-30' ? 'bg-[#05a353] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              30 de Septiembre (2 notas)
-            </button>
+            {recentDateShortcuts.map((item) => (
+              <button
+                key={item.dateKey}
+                onClick={() => setSelectedDate(selectedDate === item.dateKey ? '' : item.dateKey)}
+                className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors cursor-pointer ${
+                  selectedDate === item.dateKey ? 'bg-[#05a353] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
 
           {/* Interactive Calendar Grid */}
@@ -403,7 +406,7 @@ export default function SearchPage() {
             const active = selectedCat === c.slug
             return (
               <button
-                key={c.id}
+                key={c.slug}
                 onClick={() => setSelectedCat(active ? '' : c.slug)}
                 className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-colors ${
                   active

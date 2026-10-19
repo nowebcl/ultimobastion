@@ -3,6 +3,19 @@ import { Link } from 'react-router-dom'
 import { Flame, ChevronRight } from 'lucide-react'
 import { getPostUrl } from '../utils/postsService'
 
+const formatTickerTime = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false })
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr.substring(11, 16)
+}
+
 export default function BreakingTicker({ posts = [] }) {
   if (!posts || posts.length === 0) return null
 
@@ -28,7 +41,7 @@ export default function BreakingTicker({ posts = [] }) {
                 className="hover:text-amber-400 transition-colors flex items-center gap-2 group"
               >
                 <span className="text-slate-400 font-mono text-[11px]">
-                  {post.date ? post.date.substring(11, 16) : ''}
+                  {formatTickerTime(post.date)}
                 </span>
                 <span className="font-medium group-hover:underline line-clamp-1 max-w-[380px] sm:max-w-[450px]">
                   {post.title}
