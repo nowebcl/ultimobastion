@@ -250,7 +250,7 @@ export default function PostDetailPage() {
       if (url.includes('wp-content')) {
         const clean = url.replace(/https?:\/\/i\d\.wp\.com\//, 'https://').split('?')[0]
         const domainPath = clean.replace(/^https?:\/\//, '')
-        return `https://i0.wp.com/${domainPath}?w=${targetWidth}&strip=all&quality=75`
+        return `https://i0.wp.com/${domainPath}?w=${targetWidth}&strip=all&quality=65&format=webp`
       }
       return url
     }

@@ -612,7 +612,7 @@ export default function HistoriaPage() {
               <div className="flex items-center gap-2">
                 <a
                   href={activePhoto}
-                  download={`Maullin_Historia_${currentPhotoIdx + 1}.jpeg`}
+                  download={`Maullin_Historia_${currentPhotoIdx + 1}.webp`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 bg-white border border-slate-200 text-xs font-bold flex items-center gap-1.5"

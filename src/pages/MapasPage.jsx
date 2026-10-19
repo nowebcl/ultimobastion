@@ -124,105 +124,105 @@ const authenticMaps = [
   {
     id: 1,
     roman: 'I',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.14-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.14-PM.webp',
     title: 'Lámina I: Sistema Fluvial del Río Maullín',
     description: 'Levantamiento hidrográfico y cartográfico general del curso y estuario del Río Maullín.'
   },
   {
     id: 2,
     roman: 'II',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.14-PM-1.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.14-PM-1.webp',
     title: 'Lámina II: Estructura Hidrográfica y Red de Afluentes',
     description: 'Detalle de tributarios, esteros y ramales fluviales en la cuenca baja e intermedia.'
   },
   {
     id: 3,
     roman: 'III',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.15-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.15-PM.webp',
     title: 'Lámina III: Carta Geográfica Costera y Desembocadura',
     description: 'Relieve de la desembocadura en el Océano Pacífico, barra arenosa y litoral comunal.'
   },
   {
     id: 4,
     roman: 'IV',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.16-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.16-PM.webp',
     title: 'Lámina IV: Humedales Mareales y Red Estuarina',
     description: 'Delimitación de áreas inundables, marismas y ecosistemas del estuario maulino.'
   },
   {
     id: 5,
     roman: 'V',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.16-PM-1.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.16-PM-1.webp',
     title: 'Lámina V: Zonificación Territorial y Cobertura Ribereña',
     description: 'Uso de suelo, formaciones vegetales y distribución de planicies fluviales.'
   },
   {
     id: 6,
     roman: 'VI',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.17-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.17-PM.webp',
     title: 'Lámina VI: Dinámica de Mareas y Mezcla Salino-Dulce',
     description: 'Penetración de corrientes oceánicas y gradiente de salinidad a lo largo del cauce.'
   },
   {
     id: 7,
     roman: 'VII',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.18-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.18-PM.webp',
     title: 'Lámina VII: Geomorfología y Huella del Terremoto de 1960',
     description: 'Alteraciones del terreno, subsidencia tectónica y nuevas zonas anegadas posteriores al sismo.'
   },
   {
     id: 8,
     roman: 'VIII',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.19-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.19-PM.webp',
     title: 'Lámina VIII: Asentamientos y Caletas Tradicionales',
     description: 'Poblaciones ribereñas históricas: Maullín, Quenuir, Amortajado y caseríos aledaños.'
   },
   {
     id: 9,
     roman: 'IX',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.21-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.21-PM.webp',
     title: 'Lámina IX: Cartografía Histórica - Plano Janequeo 1857',
     description: 'Levantamiento temprano de oficiales de la Armada Chilena a bordo de la escampavía Janequeo.'
   },
   {
     id: 10,
     roman: 'X',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.21-PM-1.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.21-PM-1.webp',
     title: 'Lámina X: Exploraciones Hidrográficas de Vidal Gormaz',
     description: 'Documentación del explorador Francisco Vidal Gormaz sobre las márgenes y sondas del río.'
   },
   {
     id: 11,
     roman: 'XI',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.23-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.23-PM.webp',
     title: 'Lámina XI: Registro Cartográfico Colonial y Republicano',
     description: 'Comparación histórica de topónimos, rutas fluviales y perfiles costeros de los siglos XIX y XX.'
   },
   {
     id: 12,
     roman: 'XII',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.25-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.25-PM.webp',
     title: 'Lámina XII: Cartas de Navegación del Seno y Río Maullín',
     description: 'Sondas batimétricas, bajos fondos y canales seguros de acceso marítimo-fluvial.'
   },
   {
     id: 13,
     roman: 'XIII',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.26-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.26-PM.webp',
     title: 'Lámina XIII: Carta Topográfica y Cuenca Superior',
     description: 'Conexión geográfica desde el desagüe del Lago Llanquihue hacia las llanuras occidentales.'
   },
   {
     id: 14,
     roman: 'XIV',
-    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.27-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-01-27-at-6.19.27-PM.webp',
     title: 'Lámina XIV: Mapa Físico Vertical del Litoral y Cuenca',
     description: 'Perspectiva cartográfica integral de la comarca maulina y su transición hacia el mar abierto.'
   },
   {
     id: 15,
     roman: 'XV',
-    image: '/images/mapas/WhatsApp-Image-2026-03-18-at-7.03.31-PM.jpeg',
+    image: '/images/mapas/WhatsApp-Image-2026-03-18-at-7.03.31-PM.webp',
     title: 'Lámina XV: Archivo Cartográfico Patrimonial Comunal',
     description: 'Documento histórico complementario incorporado desde el fondo de difusión municipal y Biblioteca Nacional.'
   }
@@ -666,7 +666,7 @@ export default function MapasPage() {
 
                   <a
                     href={mapItem.image}
-                    download={`Maullin_Mapa_${mapItem.id}.jpeg`}
+                    download={`Maullin_Mapa_${mapItem.id}.webp`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-50 border border-slate-300 transition-all shadow-2xs"
@@ -743,7 +743,7 @@ export default function MapasPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <a
                   href={activeModalMap.image}
-                  download={`Maullin_Mapa_${activeModalMap.id}.jpeg`}
+                  download={`Maullin_Mapa_${activeModalMap.id}.webp`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-xl text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 shadow-2xs text-xs font-bold flex items-center gap-1.5 transition-colors"

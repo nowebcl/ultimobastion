@@ -18,7 +18,7 @@ import {
   getPocketBaseFileUrl 
 } from '../utils/pocketbase'
 import { syncDbPosts, getActiveCategoriesWithPosts, getPostUrl, getPostDateKey } from '../utils/postsService'
-import { compressImageToWebP, formatBytes } from '../utils/imageOptimizer'
+import { compressImageToWebP, ensureWebPFile, formatBytes } from '../utils/imageOptimizer'
 
 const getTodayDateInput = () => {
   const now = new Date()
@@ -101,6 +101,7 @@ export default function AdminPage() {
   const [coverPreview, setCoverPreview] = useState(null)
   const [galleryFiles, setGalleryFiles] = useState([])
   const [galleryPreviews, setGalleryPreviews] = useState([])
+  const [removedGalleryNames, setRemovedGalleryNames] = useState([])
   const [isOptimizingCover, setIsOptimizingCover] = useState(false)
   const [coverOptMeta, setCoverOptMeta] = useState(null)
   const [isOptimizingGallery, setIsOptimizingGallery] = useState(false)
@@ -262,10 +263,11 @@ export default function AdminPage() {
   const handleCoverSelect = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (coverInputRef.current) coverInputRef.current.value = ''
 
     setIsOptimizingCover(true)
     try {
-      const opt = await compressImageToWebP(file, 1200, 0.70)
+      const opt = await compressImageToWebP(file, 880, 0.65, 42)
       if (coverPreview && !coverPreview.startsWith('http')) URL.revokeObjectURL(coverPreview)
       setCoverFile(opt.file)
       setCoverPreview(opt.previewUrl)
@@ -298,12 +300,12 @@ export default function AdminPage() {
   // ----------------------------------------------------
   const handleGallerySelect = async (e) => {
     const selected = Array.from(e.target.files || [])
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
     if (selected.length === 0) return
 
-    const remainingSlots = MAX_NOTICIA_GALLERY - galleryFiles.length
+    const remainingSlots = MAX_NOTICIA_GALLERY - galleryPreviews.length
     if (remainingSlots <= 0) {
       alert(`Has alcanzado el límite máximo de ${MAX_NOTICIA_GALLERY} imágenes en la galería de la noticia.`)
-      if (galleryInputRef.current) galleryInputRef.current.value = ''
       return
     }
 
@@ -315,7 +317,7 @@ export default function AdminPage() {
     setIsOptimizingGallery(true)
     try {
       const optimizedResults = await Promise.all(
-        filesToProcess.map(f => compressImageToWebP(f, 1200, 0.70))
+        filesToProcess.map(f => compressImageToWebP(f, 800, 0.62, 34))
       )
       const newFiles = optimizedResults.map(r => r.file)
       const newPreviews = optimizedResults.map(r => r.previewUrl)
@@ -339,14 +341,29 @@ export default function AdminPage() {
       setGalleryPreviews(prev => [...prev, ...newPreviews])
     } finally {
       setIsOptimizingGallery(false)
-      if (galleryInputRef.current) galleryInputRef.current.value = ''
     }
   }
 
   const handleRemoveGalleryImage = (index) => {
     const previewToRemove = galleryPreviews[index]
-    if (previewToRemove && !previewToRemove.startsWith('http')) URL.revokeObjectURL(previewToRemove)
-    setGalleryFiles(prev => prev.filter((_, i) => i !== index))
+    if (previewToRemove) {
+      if (previewToRemove.startsWith('http')) {
+        // Existing PocketBase file -> extract filename so PocketBase deletes it from VPS disk on save
+        const parts = previewToRemove.split('?')[0].split('/')
+        const fileName = parts[parts.length - 1]
+        if (fileName) {
+          setRemovedGalleryNames(prev => [...prev, fileName])
+        }
+      } else {
+        URL.revokeObjectURL(previewToRemove)
+      }
+    }
+    // Calculate how many existing remote previews precede this index
+    const remoteCountBefore = galleryPreviews.slice(0, index).filter(u => u && u.startsWith('http')).length
+    if (!previewToRemove || !previewToRemove.startsWith('http')) {
+      const localFileIndex = index - remoteCountBefore
+      setGalleryFiles(prev => prev.filter((_, i) => i !== localFileIndex))
+    }
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
@@ -355,12 +372,12 @@ export default function AdminPage() {
   // ----------------------------------------------------
   const handleEmpGallerySelect = async (e) => {
     const selected = Array.from(e.target.files || [])
+    if (empGalleryInputRef.current) empGalleryInputRef.current.value = ''
     if (selected.length === 0) return
 
     const remainingSlots = MAX_EMP_GALLERY - empGalleryFiles.length
     if (remainingSlots <= 0) {
       alert(`Has alcanzado el límite máximo de ${MAX_EMP_GALLERY} imágenes en la galería del emprendimiento.`)
-      if (empGalleryInputRef.current) empGalleryInputRef.current.value = ''
       return
     }
 
@@ -372,7 +389,7 @@ export default function AdminPage() {
     setIsOptimizingEmpGallery(true)
     try {
       const optimizedResults = await Promise.all(
-        filesToProcess.map(f => compressImageToWebP(f, 1000, 0.70))
+        filesToProcess.map(f => compressImageToWebP(f, 800, 0.62, 34))
       )
       const newFiles = optimizedResults.map(r => r.file)
       const newPreviews = optimizedResults.map(r => r.previewUrl)
@@ -396,7 +413,6 @@ export default function AdminPage() {
       setEmpGalleryPreviews(prev => [...prev, ...newPreviews])
     } finally {
       setIsOptimizingEmpGallery(false)
-      if (empGalleryInputRef.current) empGalleryInputRef.current.value = ''
     }
   }
 
@@ -487,6 +503,7 @@ export default function AdminPage() {
       setGalleryPreviews([])
     }
     setGalleryFiles([])
+    setRemovedGalleryNames([])
 
     // Load full article content if not included in lite list
     let fullContent = post.content || ''
@@ -520,6 +537,7 @@ export default function AdminPage() {
     handleRemoveCover()
     setGalleryFiles([])
     setGalleryPreviews([])
+    setRemovedGalleryNames([])
     setPostError('')
     setPostSuccess(null)
     setActiveSubView('list')
@@ -602,20 +620,30 @@ export default function AdminPage() {
       fd.append('featured', postFeatured ? 'true' : 'false')
       fd.append('date', `${chosenDay}T${timeSuffix}`)
 
-      // Append cover image if a new file was chosen
+      // Ensure cover image is ultra-lightweight WebP before uploading
       if (coverFile) {
-        fd.append('image', coverFile)
+        const finalCover = await ensureWebPFile(coverFile, 880, 42)
+        fd.append('image', finalCover)
       }
 
-      // Append new gallery files
+      // If editing, delete any removed gallery files from VPS storage
+      if (editingPostId && removedGalleryNames.length > 0) {
+        for (const remName of removedGalleryNames) {
+          fd.append('gallery-', remName)
+        }
+      }
+
+      // Ensure all gallery files are ultra-lightweight WebP before uploading
       for (const f of galleryFiles) {
-        fd.append('gallery', f)
+        const finalGalleryImg = await ensureWebPFile(f, 800, 34)
+        fd.append('gallery', finalGalleryImg)
       }
 
       let record
       if (editingPostId) {
         // UPDATE existing record
         record = await pb.collection('noticias').update(editingPostId, fd)
+        setRemovedGalleryNames([])
         setPostSuccess({
           id: record.id,
           slug: record.slug,
@@ -657,6 +685,7 @@ export default function AdminPage() {
         handleRemoveCover()
         setGalleryFiles([])
         setGalleryPreviews([])
+        setRemovedGalleryNames([])
       }
     } catch (err) {
       console.error('Error saving post:', err)
@@ -792,10 +821,11 @@ export default function AdminPage() {
   const handleEmpFileSelect = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (empFileInputRef.current) empFileInputRef.current.value = ''
 
     setIsOptimizingEmp(true)
     try {
-      const opt = await compressImageToWebP(file, 1000, 0.70)
+      const opt = await compressImageToWebP(file, 800, 0.62, 34)
       if (empPreview && !empPreview.startsWith('http')) URL.revokeObjectURL(empPreview)
       setEmpFile(opt.file)
       setEmpPreview(opt.previewUrl)
@@ -846,11 +876,13 @@ export default function AdminPage() {
       fd.append('featured', empFeatured ? 'true' : 'false')
 
       if (empFile) {
-        fd.append('image', empFile)
+        const finalEmpCover = await ensureWebPFile(empFile, 800, 34)
+        fd.append('image', finalEmpCover)
       }
 
       for (const f of empGalleryFiles) {
-        fd.append('gallery', f)
+        const finalEmpGal = await ensureWebPFile(f, 800, 34)
+        fd.append('gallery', finalEmpGal)
       }
 
       empCacheRef.current.clear()
@@ -1895,7 +1927,7 @@ export default function AdminPage() {
                     {/* Submit Button */}
                     <button
                       type="submit"
-                      disabled={postSubmitting}
+                      disabled={postSubmitting || isOptimizingCover || isOptimizingGallery}
                       className="w-full py-3 px-5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {postSubmitting ? (

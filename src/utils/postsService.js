@@ -3,7 +3,7 @@ import categoriesData from '../data/categories.json'
 import { pb, getPocketBaseFileUrl } from './pocketbase.js'
 
 // In-memory cache for live database posts (initialized from localStorage if available for 0ms first paint)
-const LIVE_CACHE_KEY = 'bastion_live_db_posts_v3'
+const LIVE_CACHE_KEY = 'bastion_live_db_posts_v4'
 let liveDbPosts = (() => {
   if (typeof window !== 'undefined') {
     try {

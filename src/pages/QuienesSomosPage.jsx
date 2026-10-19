@@ -195,13 +195,14 @@ export default function QuienesSomosPage() {
         <div className="pt-4">
           <figure className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
             <img
-              src="/images/quienes-somos.jpg"
+              src="/images/site/quienes-somos.webp"
               alt="Maullín Último Bastión - Imagen territorial"
               loading="lazy"
+              decoding="async"
               className="w-full h-auto max-h-[75vh] object-cover object-center"
               onError={(e) => {
-                // Fallback to original remote URL if local is not resolved
-                e.target.src = 'https://maullinultimobastion.cl/wp-content/uploads/2026/01/172690ad-5038-4f89-a410-dc7ffff6cf72.jpg'
+                e.currentTarget.onerror = null
+                e.currentTarget.src = '/images/default-news.webp'
               }}
             />
             <figcaption className="p-4 sm:p-5 bg-slate-50/80 border-t border-slate-100 text-xs sm:text-sm text-slate-600 text-center font-medium">
