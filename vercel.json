@@ -1,5 +1,22 @@
 {
+  "functions": {
+    "api/og.js": {
+      "includeFiles": "src/data/posts_index.json",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|facebot|facebookcatalog|meta-externalagent|twitterbot|whatsapp|linkedinbot|slackbot|telegrambot|discordbot|applebot|pinterest|google-inspectiontool|bingbot|developers\\.google\\.com).*"
+        }
+      ],
+      "destination": "/api/og?path=$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

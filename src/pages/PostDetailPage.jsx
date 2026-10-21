@@ -232,6 +232,65 @@ export default function PostDetailPage() {
     return () => { cancelled = true }
   }, [slug])
 
+  // Dynamic document title and Open Graph metadata in client browser
+  useEffect(() => {
+    if (!post) return
+
+    const previousTitle = document.title
+    const pageTitle = `${post.title} | Último Bastión Maullín`
+    document.title = pageTitle
+
+    const cleanDesc = (post.excerpt || post.content || '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 160)
+
+    const permalink = getPostUrl(post)
+    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    const canonical = isLocalhost ? `${window.location.origin}${permalink}` : `https://www.maullinultimobastion.cl${permalink}`
+    const imageUrl = post.image || 'https://www.maullinultimobastion.cl/images/default-news.webp'
+
+    const metaTags = [
+      { property: 'og:title', content: pageTitle },
+      { property: 'og:description', content: cleanDesc },
+      { property: 'og:image', content: imageUrl },
+      { property: 'og:image:secure_url', content: imageUrl },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: post.title },
+      { property: 'og:url', content: canonical },
+      { property: 'og:type', content: 'article' },
+      { property: 'og:site_name', content: 'Último Bastión Maullín' },
+      { property: 'og:locale', content: 'es_CL' },
+      { name: 'description', content: cleanDesc },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: pageTitle },
+      { name: 'twitter:description', content: cleanDesc },
+      { name: 'twitter:image', content: imageUrl }
+    ]
+
+    const createdElements = []
+
+    metaTags.forEach(({ property, name, content }) => {
+      const selector = property ? `meta[property="${property}"]` : `meta[name="${name}"]`
+      let el = document.querySelector(selector)
+      if (!el) {
+        el = document.createElement('meta')
+        if (property) el.setAttribute('property', property)
+        if (name) el.setAttribute('name', name)
+        document.head.appendChild(el)
+        createdElements.push(el)
+      }
+      el.setAttribute('content', content)
+    })
+
+    return () => {
+      document.title = previousTitle
+      createdElements.forEach(el => el.remove())
+    }
+  }, [post])
+
   // Separate textual article from trailing image stacks to keep article neat and not overly stretched
   const { cleanTextHtml, galleryImages } = useMemo(() => {
     if (!post || !post.content) {
@@ -523,9 +582,13 @@ export default function PostDetailPage() {
   const mainCategory = post.categories?.[0] || { name: 'Comunidad', slug: 'cultura-comunidad' }
   const relatedPosts = getRelatedPosts(post, 4)
   const mostReadSidebar = allPosts.slice(0, 5)
-  const currentUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}${getPostUrl(post)}`
-    : getPostUrl(post)
+
+  // Canonical share URL (ensures production domain for Facebook crawler and messengers)
+  const permalinkPath = getPostUrl(post)
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  const currentUrl = typeof window !== 'undefined'
+    ? (isLocal ? `${window.location.origin}${permalinkPath}` : `https://www.maullinultimobastion.cl${permalinkPath}`)
+    : `https://www.maullinultimobastion.cl${permalinkPath}`
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl)
@@ -1029,13 +1092,44 @@ export default function PostDetailPage() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">Compartir:</span>
+                
+                {/* Facebook Button at Bottom of Article */}
+                <button
+                  onClick={shareFacebook}
+                  aria-label="Compartir en Facebook"
+                  title="Compartir en Facebook"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1877F2] hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-transform hover:scale-105 cursor-pointer"
+                >
+                  <FacebookIcon className="w-3.5 h-3.5" />
+                  <span>Facebook</span>
+                </button>
+
+                {/* WhatsApp Button at Bottom of Article */}
+                <button
+                  onClick={shareWhatsApp}
+                  aria-label="Compartir en WhatsApp"
+                  title="Compartir en WhatsApp"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-emerald-600 text-white text-xs font-bold shadow-2xs transition-transform hover:scale-105 cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </button>
+
+                {/* Copy Link Button */}
                 <button
                   onClick={handleCopyLink}
-                  className="text-xs text-sky-700 hover:underline flex items-center gap-1 font-semibold"
+                  aria-label="Copiar enlace"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    copied
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  }`}
+                  title={copied ? '¡Copiado!' : 'Copiar enlace'}
                 >
-                  <LinkIcon className="w-3.5 h-3.5" />
-                  {copied ? '¡Enlace copiado al portapapeles!' : 'Copiar enlace'}
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <LinkIcon className="w-3.5 h-3.5" />}
+                  <span>{copied ? '¡Copiado!' : 'Copiar enlace'}</span>
                 </button>
               </div>
             </div>
@@ -1231,18 +1325,33 @@ export default function PostDetailPage() {
           <span>Volver al archivo</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Facebook Mobile Share Button */}
+          <button
+            onClick={shareFacebook}
+            aria-label="Compartir en Facebook"
+            title="Compartir en Facebook"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#1877F2] hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-transform active:scale-95 cursor-pointer"
+          >
+            <FacebookIcon className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">Facebook</span>
+          </button>
+
+          {/* WhatsApp Mobile Share Button */}
           <button
             onClick={shareWhatsApp}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#25D366] text-white text-xs font-bold shadow-2xs"
+            aria-label="Compartir en WhatsApp"
+            title="Compartir en WhatsApp"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#25D366] hover:bg-emerald-600 text-white text-xs font-bold shadow-2xs transition-transform active:scale-95 cursor-pointer"
           >
             <MessageCircle className="w-3.5 h-3.5" />
-            <span>Compartir</span>
+            <span>WhatsApp</span>
           </button>
           
           <button
             onClick={handleLike}
-            className={`p-1.5 rounded-full border ${liked ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}
+            aria-label="Me gusta"
+            className={`p-1.5 rounded-full border transition-colors ${liked ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}
           >
             <Heart className={`w-4 h-4 ${liked ? 'fill-rose-600' : ''}`} />
           </button>
